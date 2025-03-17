@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 // import { v4 as uuid } from "uuid";
-// import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 // import { getBase64, getSockets } from "../lib/helper.js";
 
 const cookieOptions = {
@@ -36,9 +36,14 @@ const emitEvent = (req, event, users, data) => {
   console.log("Emitting Event", event)
 }
 
+const deleteFilesFromCloudinary = async (public_ids) => {
+
+};
+
 export {
     connectDB,
     sendToken,
     cookieOptions,
     emitEvent,
+    deleteFilesFromCloudinary,
   };

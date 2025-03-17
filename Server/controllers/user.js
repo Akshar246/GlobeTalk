@@ -2,7 +2,8 @@ import {User} from '../models/user.js'
 import { compare } from "bcrypt";
 import {cookieOptions, sendToken} from '../utils/features.js';
 import {TryCatch} from "../middlewares/error.js"
-import { ErrorHandler } from '../utils/utility.js';
+import { ErrorHandler} from '../utils/utility.js';
+
 
 
 // Create a new user and save it to the database and save token in cookie
@@ -13,13 +14,12 @@ const newUser = TryCatch(async (req, res, next) => {
   
     if (!file) return next(new ErrorHandler("Please Upload Avatar"));
   
-    const result = await uploadFilesToCloudinary([file]);
+    // const result = await uploadFilesToCloudinary([file]);
   
     const avatar = {
       public_id: result[0].public_id,
       url: result[0].url,
     };
-  
     const user = await User.create({
       name,
       bio,
@@ -48,7 +48,7 @@ const newUser = TryCatch(async (req, res, next) => {
   });
 
 // get ny profile 
-const getMyProfile = TryCatch(async (req, res, next) => {
+const getMyProfile = TryCatch(async (req, res) => {
   const user = await User.findById(req.user);
 
   if (!user) return next(new ErrorHandler("User not found", 404));

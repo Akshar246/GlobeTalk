@@ -8,10 +8,10 @@ const schema = new Schema(
       type: String,
       required: true,
     },
-    // bio: {
-    //   type: String,
-    //   required: true,
-    // },
+    bio: {
+      type: String,
+      required: true,
+    },
     username: {
       type: String,
       required: true,
@@ -27,10 +27,10 @@ const schema = new Schema(
         type: String,
         required: true,
       },
-      // url: {
-      //   type: String,
-      //   required: true,
-      // },
+      url: {
+        type: String,
+        required: true,
+      },
     },
   },
   {
