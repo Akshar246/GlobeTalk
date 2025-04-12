@@ -1,0 +1,28 @@
+# === Root-Level ===
+.DS_Store
+.vscode/
+*.log
+
+# === Ignore Node Stuff ===
+node_modules/
+
+# === Ignore Environment Files ===
+.env
+.env.local
+.env.*.local
+
+# === Build Outputs ===
+dist/
+build/
+
+# === Client Specific ===
+Client/node_modules/
+Client/.env
+Client/dist/
+Client/build/
+
+# === Server Specific ===
+Server/node_modules/
+Server/.env
+Server/dist/
+Server/build/
