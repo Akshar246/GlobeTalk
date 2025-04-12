@@ -87,12 +87,13 @@ const Dashboard = () => {
         Icon={<GroupIcon />}
       />
       <Widget
-        title={"Messages"}
+        title={"Messages"} 
         value={stats?.messagesCount}
         Icon={<MessageIcon />}
       />
     </Stack>
   );
+  console.log(data);
 
   return (
     <AdminLayout>

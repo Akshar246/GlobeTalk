@@ -32,11 +32,18 @@ const schema = new Schema(
         required: true,
       },
     },
+
+    // ✅ Add this 👇
+    language: {
+      type: String,
+      default: "en",
+    },
   },
   {
     timestamps: true,
   }
 );
+
 
 schema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();

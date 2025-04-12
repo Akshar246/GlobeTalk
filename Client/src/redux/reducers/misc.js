@@ -12,6 +12,7 @@ const initialState = {
   selectedDeleteChat: {
     chatId: "",
     groupChat: false,
+    language: "en",
   },
 };
 
@@ -46,6 +47,9 @@ const miscSlice = createSlice({
     setSelectedDeleteChat: (state, action) => {
       state.selectedDeleteChat = action.payload;
     },
+    setLanguage: (state, action) => {
+      state.language = action.payload;
+    },
   },
 });
 
@@ -60,4 +64,5 @@ export const {
   setIsDeleteMenu,
   setUploadingLoader,
   setSelectedDeleteChat,
+  setLanguage,
 } = miscSlice.actions;

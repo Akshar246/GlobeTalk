@@ -52,7 +52,7 @@ const NewGroup = () => {
     if (!groupName.value) return toast.error("Group name is required");
 
     if (selectedMembers.length < 2)
-      return toast.error("Please Select Atleast 3 Members");
+      return toast.error("Please Select At least 3 Members");
 
     newGroup("Creating New Group...", {
       name: groupName.value,

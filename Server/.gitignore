@@ -1,0 +1,16 @@
+# Node & build
+node_modules/
+dist/
+build/
+.vscode/
+.env
+.env.local
+package-lock.json
+
+# Logs & cache
+*.log
+.cache/
+.DS_Store
+
+# OS/system junk
+Thumbs.db

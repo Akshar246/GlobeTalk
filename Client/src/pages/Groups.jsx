@@ -36,7 +36,6 @@ import {
   useRenameGroupMutation,
 } from "../redux/api/api";
 import { setIsAddMember } from "../redux/reducers/misc";
-import BouncingSkeleton from "../styles/StyledComponents";
 
 const ConfirmDeleteDialog = lazy(() =>
   import("../components/dialogs/ConfirmDeleteDialog")

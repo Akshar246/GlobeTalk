@@ -55,6 +55,7 @@ const AppLayout = () => (WrappedComponent) => {
       dispatch(setIsDeleteMenu(true));
       dispatch(setSelectedDeleteChat({ chatId, groupChat }));
       deleteMenuAnchor.current = e.currentTarget;
+      console.log("Delete", __dirname, groupChat)
     };
 
     const handleMobileClose = () => dispatch(setIsMobile(false));
