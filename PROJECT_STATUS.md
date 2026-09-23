@@ -6,10 +6,10 @@
 ---
 
 ## Last Updated
-2026-09-23 — Day 1 complete ✅
+2026-09-23 — Day 2 complete ✅
 
 ## Live URLs
-- Frontend (Vercel): _deploying next_
+- Frontend (Vercel): https://globe-talk-brown.vercel.app ✅ LIVE
 - Backend (Render): https://globetalk-server-7n6b.onrender.com ✅ LIVE
 - MongoDB Atlas: arivo-cluster → GlobeTalk database ✅ CONNECTED
 
@@ -26,24 +26,20 @@
 - Admin dashboard with Chart.js analytics
 - Friend request system
 - Group chat creation and management
-- **[Day 1]** Removed 265 lines of dead code from Chat.jsx
-- **[Day 1]** Removed 85 lines of dead code from app.js
-- **[Day 1]** Renamed versel.json → vercel.json (spelling fix)
-- **[Day 1]** Created Server/.env.example and Client/.env.example
-- **[Day 1]** Created root README.md with architecture, features, badges
+- **[Day 1]** Removed dead code, fixed typos, created env examples and README
+- **[Day 2]** Deployed MongoDB Atlas, Render (Backend), and Vercel (Frontend)
 
 ---
 
 ## In Progress 🔄
-- Day 2: Free Deployment (MongoDB Atlas + Render + Vercel)
+- Day 3: Fix Translation Pipeline (server-side for old messages)
 
 ---
 
 ## Next Up 📋
-1. Day 2 — Set up MongoDB Atlas M0 free cluster
-2. Day 2 — Deploy Server to Render.com (free Node.js web service)
-3. Day 2 — Deploy Client to Vercel
-4. Day 3 — Fix translation pipeline for historical messages (server-side)
+1. Day 3 — Remove client-side batch translation in Chat.jsx (lines ~470)
+2. Day 3 — Update getMessages controller to translate historical messages server-side
+3. Day 3 — Wire it together and test with two languages
 
 ---
 
@@ -77,8 +73,8 @@
 | Day | Task | Status |
 |---|---|---|
 | 1 | Foundation & Cleanup | ✅ Done |
-| 2 | Free Deployment (Atlas + Render + Vercel) | 🔄 Next |
-| 3 | Fix Translation Pipeline (server-side for old messages) | ⬜ |
+| 2 | Free Deployment (Atlas + Render + Vercel) | ✅ Done |
+| 3 | Fix Translation Pipeline (server-side for old messages) | 🔄 Next |
 | 4 | In-app Language Switcher in Header | ⬜ |
 | 5 | AI Feature 1: Conversation Summariser (Gemini) | ⬜ |
 | 6 | AI Feature 2: Smart Reply Suggestions (Gemini) | ⬜ |

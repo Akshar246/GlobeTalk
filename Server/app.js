@@ -77,8 +77,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:4173",
-      "https://globetalk-seven.vercel.app",
-      "https://globetalk.vercel.app",
+      "https://globe-talk-brown.vercel.app",
       process.env.CLIENT_URL,
     ],
     credentials: true,

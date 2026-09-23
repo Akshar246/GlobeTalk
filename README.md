@@ -3,7 +3,7 @@
 > **Real-time multilingual chat — every user reads in their own language.**
 
 [![Live Backend](https://img.shields.io/badge/Backend-Live%20on%20Render-46E3B7?style=for-the-badge&logo=render)](https://globetalk-server-7n6b.onrender.com)
-[![Live Demo](https://img.shields.io/badge/Frontend-Deploying%20on%20Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
+[![Live Frontend](https://img.shields.io/badge/Frontend-Live%20on%20Vercel-black?style=for-the-badge&logo=vercel)](https://globe-talk-brown.vercel.app)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js)](https://nodejs.org)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-Real--Time-black?style=for-the-badge&logo=socket.io)](https://socket.io)
