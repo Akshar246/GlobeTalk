@@ -76,8 +76,9 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://globe-talk-eight.vercel.app",
       "http://localhost:4173",
+      "https://globetalk-seven.vercel.app",
+      "https://globetalk.vercel.app",
       process.env.CLIENT_URL,
     ],
     credentials: true,

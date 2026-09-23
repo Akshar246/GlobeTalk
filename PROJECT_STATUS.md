@@ -9,9 +9,9 @@
 2026-09-23 — Day 1 complete ✅
 
 ## Live URLs
-- Frontend (Vercel): _not yet deployed_
-- Backend (Render): _not yet deployed_
-- MongoDB Atlas: _not yet configured_
+- Frontend (Vercel): _deploying next_
+- Backend (Render): https://globetalk-server-7n6b.onrender.com ✅ LIVE
+- MongoDB Atlas: arivo-cluster → GlobeTalk database ✅ CONNECTED
 
 ---
 
