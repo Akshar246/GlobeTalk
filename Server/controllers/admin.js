@@ -12,10 +12,13 @@ const adminLogin = TryCatch(async (req, res, next) => {
   const { secretKey } = req.body;
 
   const isMatched = secretKey === adminSecretKey;
-
   if (!isMatched) return next(new ErrorHandler("Invalid Admin Key", 401));
 
-  const token = jwt.sign(secretKey, process.env.JWT_SECRET);
+  const token = jwt.sign(
+    { role: "admin" },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
 
   return res
     .status(200)
@@ -28,6 +31,7 @@ const adminLogin = TryCatch(async (req, res, next) => {
       message: "Authenticated Successfully, Welcome BOSS",
     });
 });
+
 
 const adminLogout = TryCatch(async (req, res, next) => {
   return res

@@ -32,9 +32,9 @@ import { setIsFileMenu } from "../redux/reducers/misc";
 import { removeNewMessagesAlert } from "../redux/reducers/chat";
 import { TypingLoader } from "../components/layout/Loaders";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { server } from "../constants/config";
 
-
-// CHAT Sections Starts from here 
 const Chat = ({ chatId, user }) => {
   const socket = getSocket();
   const dispatch = useDispatch();
@@ -53,7 +53,6 @@ const Chat = ({ chatId, user }) => {
   const typingTimeout = useRef(null);
 
   const chatDetails = useChatDetailsQuery({ chatId, skip: !chatId });
-
   const oldMessagesChunk = useGetMessagesQuery({ chatId, page });
 
   const { data: oldMessages, setData: setOldMessages } = useInfiniteScrollTop(
@@ -71,6 +70,8 @@ const Chat = ({ chatId, user }) => {
 
   const members = chatDetails?.data?.chat?.members;
 
+  // ─── Handlers ────────────────────────────────────────────────────────────────
+
   const messageOnChange = (e) => {
     setMessage(e.target.value);
 
@@ -84,7 +85,7 @@ const Chat = ({ chatId, user }) => {
     typingTimeout.current = setTimeout(() => {
       socket.emit(STOP_TYPING, { members, chatId });
       setIamTyping(false);
-    }, [2000]);
+    }, 2000);
   };
 
   const handleFileOpen = (e) => {
@@ -94,14 +95,14 @@ const Chat = ({ chatId, user }) => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-
     if (!message.trim()) return;
-
-    // Emitting the message to the server
     socket.emit(NEW_MESSAGE, { chatId, members, message });
     setMessage("");
   };
 
+  // ─── Effects ─────────────────────────────────────────────────────────────────
+
+  // Join/leave chat room and clear state on chat switch
   useEffect(() => {
     socket.emit(CHAT_JOINED, { userId: user._id, members });
     dispatch(removeNewMessagesAlert(chatId));
@@ -115,19 +116,70 @@ const Chat = ({ chatId, user }) => {
     };
   }, [chatId]);
 
+  // Auto-scroll to newest message
   useEffect(() => {
     if (bottomRef.current)
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Redirect if chat is not accessible
   useEffect(() => {
     if (chatDetails.isError) return navigate("/");
   }, [chatDetails.isError]);
 
+  // Translate historical messages (client-side fallback for old messages from DB)
+  const preferredLanguage = localStorage.getItem("preferredLanguage") || "en";
+
+  useEffect(() => {
+    const translateOldMessages = async () => {
+      if (!oldMessages.length || preferredLanguage === "en") return;
+
+      const messagesToTranslate = oldMessages.filter(
+        (msg) =>
+          msg.sender._id !== user._id &&
+          (msg.originalContent || msg.content) &&
+          msg._translatedFor !== preferredLanguage
+      );
+
+      const texts = messagesToTranslate.map(
+        (msg) => msg.originalContent || msg.content
+      );
+      if (!texts.length) return;
+
+      try {
+        const { data } = await axios.post(`${server}/api/v1/translate`, {
+          text: texts,
+          targetLanguage: preferredLanguage,
+        });
+
+        const translated = oldMessages.map((msg) =>
+          msg.sender._id !== user._id &&
+          msg._translatedFor !== preferredLanguage
+            ? {
+                ...msg,
+                originalContent: msg.originalContent || msg.content,
+                translatedContent:
+                  data.translations[
+                    messagesToTranslate.findIndex((m) => m._id === msg._id)
+                  ],
+                _translatedFor: preferredLanguage,
+              }
+            : msg
+        );
+        setOldMessages(translated);
+      } catch (error) {
+        console.error("Translation failed:", error);
+      }
+    };
+
+    translateOldMessages();
+  }, [oldMessages, preferredLanguage]);
+
+  // ─── Socket Event Listeners ───────────────────────────────────────────────────
+
   const newMessagesListener = useCallback(
     (data) => {
       if (data.chatId !== chatId) return;
-
       setMessages((prev) => [...prev, data.message]);
     },
     [chatId]
@@ -136,7 +188,6 @@ const Chat = ({ chatId, user }) => {
   const startTypingListener = useCallback(
     (data) => {
       if (data.chatId !== chatId) return;
-
       setUserTyping(true);
     },
     [chatId]
@@ -156,13 +207,12 @@ const Chat = ({ chatId, user }) => {
       const messageForAlert = {
         content: data.message,
         sender: {
-          _id: "djasdhajksdhasdsadasdas",
+          _id: "globetalk-admin",
           name: "Admin",
         },
         chat: chatId,
         createdAt: new Date().toISOString(),
       };
-
       setMessages((prev) => [...prev, messageForAlert]);
     },
     [chatId]
@@ -176,8 +226,9 @@ const Chat = ({ chatId, user }) => {
   };
 
   useSocketEvents(socket, eventHandler);
-
   useErrors(errors);
+
+  // ─── Render ───────────────────────────────────────────────────────────────────
 
   const allMessages = [...oldMessages, ...messages];
 
@@ -206,12 +257,7 @@ const Chat = ({ chatId, user }) => {
         <div ref={bottomRef} />
       </Stack>
 
-      <form
-        style={{
-          height: "10%",
-        }}
-        onSubmit={submitHandler}
-      >
+      <form style={{ height: "10%" }} onSubmit={submitHandler}>
         <Stack
           direction={"row"}
           height={"100%"}
@@ -220,11 +266,7 @@ const Chat = ({ chatId, user }) => {
           position={"relative"}
         >
           <IconButton
-            sx={{
-              position: "absolute",
-              left: "1.5rem",
-              rotate: "30deg",
-            }}
+            sx={{ position: "absolute", left: "1.5rem", rotate: "30deg" }}
             onClick={handleFileOpen}
           >
             <AttachFileIcon />

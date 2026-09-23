@@ -28,17 +28,26 @@ import adminRoute from "./routes/admin.js";
 import { User } from "./models/user.js";
 import { Translate } from "@google-cloud/translate/build/src/v2/index.js";
 
-const translate = new Translate({ key: process.env.GOOGLE_API_KEY });
-
 dotenv.config({
   path: "./.env",
 });
+
+const translate = new Translate({ key: process.env.GOOGLE_API_KEY });
+
 const mongoURI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 3000;
-const envMode = process.env.NODE_ENV.trim() || "PRODUCTION";
-const adminSecretKey = process.env.ADMIN_SECRET_KEY || "AmitSoni246";
+const envMode = (process.env.NODE_ENV || "PRODUCTION").trim();
+const adminSecretKey = process.env.ADMIN_SECRET_KEY;
 const userSocketIDs = new Map();
 const onlineUsers = new Set();
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("Missing JWT_SECRET in environment variables");
+}
+
+if (!adminSecretKey) {
+  throw new Error("Missing ADMIN_SECRET_KEY in environment variables");
+}
 
 
 // Database connection
@@ -63,6 +72,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "https://globe-talk-eight.vercel.app",
       "http://localhost:4173",
       process.env.CLIENT_URL,
     ],
@@ -94,19 +104,51 @@ io.on("connection", (socket) => {
   userSocketIDs.set(user._id.toString(), socket.id);
 
   socket.on(NEW_MESSAGE, async ({ chatId, members, message }) => {
+    if (!chatId || !message?.trim()) return;
+
+    const senderId = user._id.toString();
+    const normalizedMembers = Array.isArray(members)
+      ? members.map((memberId) => memberId.toString())
+      : [];
+
+    if (!normalizedMembers.includes(senderId)) {
+      normalizedMembers.push(senderId);
+    }
+
+    const recipientIds = normalizedMembers.filter((memberId) => memberId !== senderId);
+    const createdAt = new Date().toISOString();
+
     const messageForDB = {
       content: message,
       sender: user._id,
       chat: chatId,
     };
 
-    const chatMembers = await User.find({ _id: { $in: members } });
+    // Immediately emit to sender so their own message appears without refresh.
+    io.to(socket.id).emit(NEW_MESSAGE, {
+      chatId,
+      message: {
+        content: message,
+        originalContent: message,
+        _id: uuid(),
+        sender: {
+          _id: user._id,
+          name: user.name,
+        },
+        chat: chatId,
+        createdAt,
+      },
+    });
 
-    for (const member of chatMembers) {
-      let finalMessage = message;
+    const chatMembers = await User.find({ _id: { $in: recipientIds } });
 
-      if (member._id.toString() !== user._id.toString()) {
-        if (member.language && member.language !== user.language) {
+    await Promise.all(
+      chatMembers.map(async (member) => {
+        let finalMessage = message;
+
+        // Always translate to receiver's preferred language.
+        // Relying on sender profile language can skip translation when users type in a different language.
+        if (member.language) {
           try {
             const [translatedText] = await translate.translate(
               message,
@@ -119,25 +161,27 @@ io.on("connection", (socket) => {
         }
 
         const socketId = userSocketIDs.get(member._id.toString());
+
         if (socketId) {
           io.to(socketId).emit(NEW_MESSAGE, {
             chatId,
             message: {
               content: finalMessage,
+              originalContent: message,
               _id: uuid(),
               sender: {
                 _id: user._id,
                 name: user.name,
               },
               chat: chatId,
-              createdAt: new Date().toISOString(),
+              createdAt,
             },
           });
 
           io.to(socketId).emit(NEW_MESSAGE_ALERT, { chatId });
         }
-      }
-    }
+      })
+    );
 
     try {
       await Message.create(messageForDB); // Store original message
@@ -176,90 +220,6 @@ io.on("connection", (socket) => {
 });
 
 
-// io.on("connection", (socket) => {
-//   const user = socket.user;
-
-//   userSocketIDs.set(user._id.toString(), socket.id);
-
-//   socket.on(NEW_MESSAGE, async ({ chatId, members, message }) => {
-//     const messageForDB = {
-//       content: message,
-//       sender: user._id,
-//       chat: chatId,
-//     };
-
-//     const chatMembers = await User.find({ _id: { $in: members } });
-
-//     for (const member of chatMembers) {
-//       let finalMessage = message;
-
-//       if (member.language && member.language !== user.language) {
-//         try {
-//           const [translatedText] = await translate.translate(
-//             message,
-//             member.language
-//           );
-//           finalMessage = translatedText;
-//         } catch (e) {
-//           console.log("Translation Error:", e);
-//         }
-//       }
-
-//       const socketId = userSocketIDs.get(member._id.toString());
-//       if (socketId) {
-//         io.to(socketId).emit(NEW_MESSAGE, {
-//           chatId,
-//           message: {
-//             content: finalMessage,
-//             _id: uuid(),
-//             sender: {
-//               _id: user._id,
-//               name: user.name,
-//             },
-//             chat: chatId,
-//             createdAt: new Date().toISOString(),
-//           },
-//         });
-
-//         io.to(socketId).emit(NEW_MESSAGE_ALERT, { chatId });
-//       }
-//     }
-
-//     try {
-//       await Message.create(messageForDB);
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   });
-
-//   socket.on(START_TYPING, ({ members, chatId }) => {
-//     const membersSockets = getSockets(members);
-//     socket.to(membersSockets).emit(START_TYPING, { chatId });
-//   });
-
-//   socket.on(STOP_TYPING, ({ members, chatId }) => {
-//     const membersSockets = getSockets(members);
-//     socket.to(membersSockets).emit(STOP_TYPING, { chatId });
-//   });
-
-//   socket.on(CHAT_JOINED, ({ userId, members }) => {
-//     onlineUsers.add(userId.toString());
-//     const membersSocket = getSockets(members);
-//     io.to(membersSocket).emit(ONLINE_USERS, Array.from(onlineUsers));
-//   });
-
-//   socket.on(CHAT_LEAVED, ({ userId, members }) => {
-//     onlineUsers.delete(userId.toString());
-//     const membersSocket = getSockets(members);
-//     io.to(membersSocket).emit(ONLINE_USERS, Array.from(onlineUsers));
-//   });
-
-//   socket.on("disconnect", () => {
-//     userSocketIDs.delete(user._id.toString());
-//     onlineUsers.delete(user._id.toString());
-//     socket.broadcast.emit(ONLINE_USERS, Array.from(onlineUsers));
-//   });
-// });
 
 app.use(errorMiddleware);
 

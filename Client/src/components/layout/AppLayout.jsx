@@ -1,5 +1,6 @@
 import { Drawer, Grid, Skeleton } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -55,7 +56,6 @@ const AppLayout = () => (WrappedComponent) => {
       dispatch(setIsDeleteMenu(true));
       dispatch(setSelectedDeleteChat({ chatId, groupChat }));
       deleteMenuAnchor.current = e.currentTarget;
-      console.log("Delete", __dirname, groupChat)
     };
 
     const handleMobileClose = () => dispatch(setIsMobile(false));
@@ -64,8 +64,12 @@ const AppLayout = () => (WrappedComponent) => {
       (data) => {
         if (data.chatId === chatId) return;
         dispatch(setNewMessagesAlert(data));
+        toast("New message received", {
+          id: `new-message-${data.chatId}`,
+          icon: "💬",
+        });
       },
-      [chatId]
+      [chatId, dispatch]
     );
 
     const newRequestListener = useCallback(() => {

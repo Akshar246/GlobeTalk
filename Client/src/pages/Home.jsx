@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
-import { Box, Typography, Stack } from "@mui/material";
-import ChatIcon from "@mui/icons-material/Chat";
+import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import { LockOutlined as LockOutlinedIcon, MessageOutlined as MessageOutlinedIcon } from "@mui/icons-material";
 import axios from "axios";
 import { server } from "../constants/config";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const originalLabels = {
-  welcome: "Welcome to GlobeTalk 🌍",
-  instruction: "Select a friend or group from the left panel to start chatting in your preferred language.",
+  title: "Welcome to GlobeTalk",
+  subtitle:
+    "Select a chat from the left panel and start messaging. Each person can read in their preferred language.",
+  action: "Go to Groups",
+  privacy: "Your personal messages stay private and secure.",
 };
 
 const Home = () => {
+  const navigate = useNavigate();
   const [translated, setTranslated] = useState(originalLabels);
   const preferredLanguage = localStorage.getItem("preferredLanguage") || "en";
 
@@ -45,23 +50,78 @@ const Home = () => {
 
   return (
     <Box
-      height="100%"
-      width="100%"
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
+      sx={{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#f0f2f5",
+        p: 2,
+      }}
     >
-      <Box maxWidth="80%" maxHeight="90%" textAlign="center">
-        <Stack spacing={2} textAlign="center">
-          <ChatIcon sx={{ fontSize: "4rem", color: "#1976d2" }} />
-          <Typography variant="h4" sx={{ fontWeight: "bold", color: "#1a237e" }}>
-            {translated.welcome}
+      <Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxWidth: 620,
+          borderRadius: 4,
+          border: "1px solid #dde5ee",
+          p: { xs: 3, sm: 4 },
+          textAlign: "center",
+          bgcolor: "#fff",
+        }}
+      >
+        <Stack spacing={2} alignItems="center">
+          <Box
+            sx={{
+              width: 70,
+              height: 70,
+              borderRadius: "50%",
+              bgcolor: "#e9f2ff",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <MessageOutlinedIcon sx={{ fontSize: "2rem", color: "#1359a1" }} />
+          </Box>
+
+          <Typography
+            sx={{
+              fontSize: { xs: "1.45rem", sm: "1.7rem" },
+              fontWeight: 700,
+              color: "#1f2937",
+            }}
+          >
+            {translated.title}
           </Typography>
-          <Typography variant="body1" sx={{ color: "#555" }}>
-            {translated.instruction}
+
+          <Typography sx={{ color: "#5f6b7a", maxWidth: 520 }}>
+            {translated.subtitle}
           </Typography>
+
+          <Button
+            variant="contained"
+            onClick={() => navigate("/groups")}
+            sx={{
+              textTransform: "none",
+              borderRadius: 99,
+              px: 2.5,
+              bgcolor: "#1565c0",
+              "&:hover": { bgcolor: "#0f4f97" },
+            }}
+          >
+            {translated.action}
+          </Button>
+
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ pt: 1 }}>
+            <LockOutlinedIcon sx={{ fontSize: "1rem", color: "#6b7280" }} />
+            <Typography sx={{ color: "#6b7280", fontSize: "0.88rem" }}>
+              {translated.privacy}
+            </Typography>
+          </Stack>
         </Stack>
-      </Box>
+      </Paper>
     </Box>
   );
 };

@@ -12,6 +12,7 @@ import React, { Suspense, lazy, useState } from "react";
 import { orange } from "../../constants/color";
 import {
   Add as AddIcon,
+  Home as HomeIcon,
   Menu as MenuIcon,
   Search as SearchIcon,
   Group as GroupIcon,
@@ -84,8 +85,11 @@ const Header = () => {
           <Toolbar>
             <Typography
               variant="h6"
+              onClick={() => navigate("/")}
               sx={{
                 display: { xs: "none", sm: "block" },
+                cursor: "pointer",
+                fontWeight: 700,
               }}
             >
               GlobeTalk
@@ -106,6 +110,12 @@ const Header = () => {
               }}
             />
             <Box>
+              <IconBtn
+                title={"Home"}
+                icon={<HomeIcon />}
+                onClick={() => navigate("/")}
+              />
+
               <IconBtn
                 title={"Search"}
                 icon={<SearchIcon />}

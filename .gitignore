@@ -1,7 +1,18 @@
 # === Root-Level ===
 .DS_Store
+**/.DS_Store
 .vscode/
 *.log
+.codex/
+
+# === Loose media files (should not be in repo root) ===
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.gif
+*.mp4
+*.mov
 
 # === Ignore Node Stuff ===
 node_modules/

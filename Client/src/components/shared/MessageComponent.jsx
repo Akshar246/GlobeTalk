@@ -1,5 +1,5 @@
-import { Box, Typography } from "@mui/material";
-import React, { memo } from "react";
+import { Box, Button, Typography } from "@mui/material";
+import React, { memo, useMemo, useState } from "react";
 import { lightBlue } from "../../constants/color";
 import moment from "moment";
 import { fileFormat } from "../../lib/features";
@@ -7,11 +7,33 @@ import RenderAttachment from "./RenderAttachment";
 import { motion } from "framer-motion";
 
 const MessageComponent = ({ message, user }) => {
-  const { sender, content, attachments = [], createdAt } = message;
+  const {
+    sender,
+    content,
+    translatedContent,
+    originalContent,
+    attachments = [],
+    createdAt,
+  } = message;
 
   const sameSender = sender?._id === user?._id;
+  const [showOriginal, setShowOriginal] = useState(false);
 
   const timeAgo = moment(createdAt).fromNow();
+  const resolvedOriginal = originalContent || content || "";
+  const resolvedTranslated = translatedContent || content || "";
+
+  const hasTranslationToggle = useMemo(
+    () =>
+      !sameSender &&
+      resolvedOriginal &&
+      resolvedTranslated &&
+      resolvedOriginal !== resolvedTranslated,
+    [sameSender, resolvedOriginal, resolvedTranslated]
+  );
+
+  const displayContent =
+    hasTranslationToggle && showOriginal ? resolvedOriginal : resolvedTranslated;
 
   return (
     <motion.div
@@ -32,7 +54,24 @@ const MessageComponent = ({ message, user }) => {
         </Typography>
       )}
 
-      {content && <Typography>{content}</Typography>}
+      {displayContent && <Typography>{displayContent}</Typography>}
+
+      {hasTranslationToggle && (
+        <Button
+          size="small"
+          onClick={() => setShowOriginal((prev) => !prev)}
+          sx={{
+            minWidth: "unset",
+            px: 0,
+            textTransform: "none",
+            fontSize: "0.72rem",
+            mt: 0.5,
+            color: "#1565c0",
+          }}
+        >
+          {showOriginal ? "Show translation" : "Show original"}
+        </Button>
+      )}
 
       {attachments.length > 0 &&
         attachments.map((attachment, index) => {
