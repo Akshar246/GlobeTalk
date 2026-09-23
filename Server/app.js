@@ -66,6 +66,10 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
+// Make io and userSocketIDs accessible in route controllers via req.app
+app.set("io", io);
+app.set("userSocketIDs", userSocketIDs);
+
 // Cookie Parser
 app.use(cookieParser());
 app.use(

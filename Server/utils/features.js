@@ -22,7 +22,6 @@ const connectDB = (uri) => {
 
 const sendToken = (res, user, code, message) => {
   const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-  console.log(token);
   return res.status(code).cookie("Globe-token", token, cookieOptions).json({
     success: true,
     user,
@@ -31,7 +30,16 @@ const sendToken = (res, user, code, message) => {
 };
 
 const emitEvent = (req, event, users, data) => {
-  console.log("Emitting Event", event);
+  const io = req.app.get("io");
+  const userSocketIDs = req.app.get("userSocketIDs");
+  if (!io || !userSocketIDs) return;
+
+  const usersArray = Array.isArray(users) ? users : [users];
+  const memberSockets = usersArray
+    .map((userId) => userSocketIDs.get(userId.toString()))
+    .filter(Boolean);
+
+  memberSockets.forEach((socketId) => io.to(socketId).emit(event, data));
 };
 
 const uploadFilesToCloudinary = async (files = []) => {
