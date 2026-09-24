@@ -27,7 +27,6 @@ const newUser = TryCatch(async (req, res, next) => {
     public_id: result[0].public_id,
     url: result[0].url,
   };
-  console.log("Language received from client:", language);
 
   const user = await User.create({
     name,
@@ -229,6 +228,23 @@ const getMyFriends = TryCatch(async (req, res) => {
   }
 });
 
+// Update user's preferred language
+const updateLanguage = TryCatch(async (req, res, next) => {
+  const { language } = req.body;
+
+  const SUPPORTED = ["en","fr","es","de","it","hi","ja","ko","zh","ar","pt","ru"];
+  if (!language || !SUPPORTED.includes(language))
+    return next(new ErrorHandler("Invalid or unsupported language code", 400));
+
+  await User.findByIdAndUpdate(req.user, { language });
+
+  return res.status(200).json({
+    success: true,
+    message: "Language updated successfully",
+    language,
+  });
+});
+
 export {
   acceptFriendRequest,
   getMyFriends,
@@ -239,4 +255,5 @@ export {
   newUser,
   searchUser,
   sendFriendRequest,
+  updateLanguage,
 };
