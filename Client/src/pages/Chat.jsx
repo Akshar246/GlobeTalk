@@ -32,8 +32,6 @@ import { setIsFileMenu } from "../redux/reducers/misc";
 import { removeNewMessagesAlert } from "../redux/reducers/chat";
 import { TypingLoader } from "../components/layout/Loaders";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { server } from "../constants/config";
 
 const Chat = ({ chatId, user }) => {
   const socket = getSocket();
@@ -127,55 +125,9 @@ const Chat = ({ chatId, user }) => {
     if (chatDetails.isError) return navigate("/");
   }, [chatDetails.isError]);
 
-  // Translate historical messages (client-side fallback for old messages from DB)
-  const preferredLanguage = localStorage.getItem("preferredLanguage") || "en";
-
-  useEffect(() => {
-    const translateOldMessages = async () => {
-      if (!oldMessages.length || preferredLanguage === "en") return;
-
-      const messagesToTranslate = oldMessages.filter(
-        (msg) =>
-          msg.sender._id !== user._id &&
-          (msg.originalContent || msg.content) &&
-          msg._translatedFor !== preferredLanguage
-      );
-
-      const texts = messagesToTranslate.map(
-        (msg) => msg.originalContent || msg.content
-      );
-      if (!texts.length) return;
-
-      try {
-        const { data } = await axios.post(`${server}/api/v1/translate`, {
-          text: texts,
-          targetLanguage: preferredLanguage,
-        });
-
-        const translated = oldMessages.map((msg) =>
-          msg.sender._id !== user._id &&
-          msg._translatedFor !== preferredLanguage
-            ? {
-                ...msg,
-                originalContent: msg.originalContent || msg.content,
-                translatedContent:
-                  data.translations[
-                    messagesToTranslate.findIndex((m) => m._id === msg._id)
-                  ],
-                _translatedFor: preferredLanguage,
-              }
-            : msg
-        );
-        setOldMessages(translated);
-      } catch (error) {
-        console.error("Translation failed:", error);
-      }
-    };
-
-    translateOldMessages();
-  }, [oldMessages, preferredLanguage]);
 
   // ─── Socket Event Listeners ───────────────────────────────────────────────────
+
 
   const newMessagesListener = useCallback(
     (data) => {

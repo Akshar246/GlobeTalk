@@ -13,8 +13,12 @@ import {
   REFETCH_CHATS,
 } from "../constants/events.js";
 import { getOtherMember } from "../lib/helper.js";
-import { User } from "../models/user.js";
 import { Message } from "../models/message.js";
+import { User } from "../models/user.js";
+import { Translate } from "@google-cloud/translate/build/src/v2/index.js";
+
+const translate = new Translate({ key: process.env.GOOGLE_API_KEY });
+
 
 const newGroupChat = TryCatch(async (req, res, next) => {
   const { name, members } = req.body;
@@ -378,7 +382,6 @@ const getMessages = TryCatch(async (req, res, next) => {
   const skip = (page - 1) * resultPerPage;
 
   const chat = await Chat.findById(chatId);
-
   if (!chat) return next(new ErrorHandler("Chat not found", 404));
 
   if (!chat.members.includes(req.user.toString()))
@@ -397,10 +400,44 @@ const getMessages = TryCatch(async (req, res, next) => {
   ]);
 
   const totalPages = Math.ceil(totalMessagesCount / resultPerPage) || 0;
+  const orderedMessages = messages.reverse();
+
+  // ── Server-side translation for historical messages ─────────────────────────
+  // Fetch the requesting user's preferred language from the database
+  const requestingUser = await User.findById(req.user).select("language");
+  const userLang = requestingUser?.language || "en";
+
+  // Only translate if user's language is not English
+  let translatedMessages = orderedMessages;
+  if (userLang !== "en") {
+    translatedMessages = await Promise.all(
+      orderedMessages.map(async (msg) => {
+        // Don't translate the user's own messages
+        if (msg.sender._id.toString() === req.user.toString()) return msg;
+
+        const originalContent = msg.content;
+        if (!originalContent) return msg;
+
+        try {
+          const [translatedText] = await translate.translate(
+            originalContent,
+            userLang
+          );
+          return {
+            ...msg,
+            content: translatedText,       // what they see (translated)
+            originalContent,               // original kept for "Show original" toggle
+          };
+        } catch {
+          return msg; // if translation fails, return original — never crash
+        }
+      })
+    );
+  }
 
   return res.status(200).json({
     success: true,
-    messages: messages.reverse(),
+    messages: translatedMessages,
     totalPages,
   });
 });
