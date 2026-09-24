@@ -27,6 +27,7 @@ import { server } from "../../constants/config";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { userNotExists } from "../../redux/reducers/auth";
+import api from "../../redux/api/api";
 import {
   setIsMobile,
   setIsNewGroup,
@@ -105,7 +106,11 @@ const Header = () => {
       );
       setSelectedLang(newLang);
       localStorage.setItem("preferredLanguage", newLang);
-      toast.success("Language updated! Reload a chat to see translated messages.");
+
+      // Invalidate message cache so all chats reload with new language
+      dispatch(api.util.invalidateTags(["Message"]));
+
+      toast.success("Language updated! Your chats will reload with translated messages.");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Could not update language");
     } finally {

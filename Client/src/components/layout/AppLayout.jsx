@@ -11,7 +11,7 @@ import {
 } from "../../constants/events";
 import { useErrors, useSocketEvents } from "../../hooks/hook";
 import { getOrSaveFromStorage } from "../../lib/features";
-import { useMyChatsQuery } from "../../redux/api/api";
+import api, { useMyChatsQuery } from "../../redux/api/api";
 import {
   incrementNotification,
   setNewMessagesAlert,
@@ -74,6 +74,9 @@ const AppLayout = () => (WrappedComponent) => {
 
     const newRequestListener = useCallback(() => {
       dispatch(incrementNotification());
+      // Invalidate notification cache so dialog shows fresh data immediately
+      dispatch(api.util.invalidateTags(["User"]));
+      toast("New friend request received!", { icon: "👋" });
     }, [dispatch]);
 
     const refetchListener = useCallback(() => {

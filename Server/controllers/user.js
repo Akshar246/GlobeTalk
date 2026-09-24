@@ -80,14 +80,15 @@ const logout = TryCatch(async (req, res) => {
 const searchUser = TryCatch(async (req, res) => {
   const { name = "" } = req.query;
 
-  // Finding All my chats
+  // Find all chats this user is part of (non-group)
   const myChats = await Chat.find({ groupChat: false, members: req.user });
 
-  //  extracting All Users from my chats means friends or people I have chatted with
+  // All people I've already chatted with
   const allUsersFromMyChats = myChats.flatMap((chat) => chat.members);
 
+  // Exclude: myself + people I've already chatted with
   const allUsersExceptMeAndFriends = await User.find({
-    _id: { $nin: allUsersFromMyChats },
+    _id: { $nin: [...allUsersFromMyChats, req.user] },
     name: { $regex: name, $options: "i" },
   });
 
