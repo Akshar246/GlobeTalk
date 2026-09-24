@@ -36,10 +36,19 @@ const App = () => {
       .get(`${server}/api/v1/user/me`, { withCredentials: true })
       .then(({ data }) => dispatch(userExists(data.user)))
       .catch(() => dispatch(userNotExists()));
-  
-    // ✅ restore admin session on load
+
+    // Restore admin session on load
     dispatch(getAdmin());
   }, [dispatch]);
+
+  // Keep Render backend alive — pings every 14 min to prevent 15-min sleep
+  useEffect(() => {
+    const ping = () =>
+      axios.get(`${server}/health`).catch(() => {});
+    ping();
+    const interval = setInterval(ping, 14 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return loader ? (
     <LayoutLoader />

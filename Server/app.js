@@ -93,7 +93,17 @@ app.use("/api/v1/admin", adminRoute);
 app.use("/api/v1/translate", translateRoute);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.status(200).json({
+    success: true,
+    message: "GlobeTalk API is running",
+    environment: process.env.NODE_ENV,
+    uptime: Math.floor(process.uptime()) + "s",
+  });
+});
+
+// Health check endpoint — also used by frontend keep-alive ping
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: Math.floor(process.uptime()) + "s" });
 });
 
 io.use((socket, next) => {
