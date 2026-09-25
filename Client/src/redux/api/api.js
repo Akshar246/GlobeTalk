@@ -159,6 +159,25 @@ const api = createApi({
       }),
       invalidatesTags: ["Chat"],
     }),
+
+    // ── AI endpoints ──────────────────────────────────────────────────────────
+    summariseChat: builder.mutation({
+      query: (chatId) => ({
+        url: "ai/summarise",
+        method: "POST",
+        credentials: "include",
+        body: { chatId },
+      }),
+    }),
+
+    smartReply: builder.mutation({
+      query: (chatId) => ({
+        url: "ai/smartreply",
+        method: "POST",
+        credentials: "include",
+        body: { chatId },
+      }),
+    }),
   }),
 });
 
@@ -180,4 +199,6 @@ export const {
   useAddGroupMembersMutation,
   useDeleteChatMutation,
   useLeaveGroupMutation,
+  useSummariseChatMutation,
+  useSmartReplyMutation,
 } = api;

@@ -32,6 +32,7 @@ import { setIsFileMenu } from "../redux/reducers/misc";
 import { removeNewMessagesAlert } from "../redux/reducers/chat";
 import { TypingLoader } from "../components/layout/Loaders";
 import { useNavigate } from "react-router-dom";
+import AISummariser from "../components/specific/AISummariser";
 
 const Chat = ({ chatId, user }) => {
   const socket = getSocket();
@@ -188,6 +189,23 @@ const Chat = ({ chatId, user }) => {
     <Skeleton />
   ) : (
     <Fragment>
+      {/* ── AI top bar ──────────────────────────────────────────────────────── */}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="flex-end"
+        px={2}
+        py={0.75}
+        sx={{ bgcolor: orange, minHeight: "2.8rem" }}
+      >
+        {chatId && (
+          <AISummariser
+            chatId={chatId}
+            onSmartReply={(text) => setMessage(text)}
+          />
+        )}
+      </Stack>
+
       <Stack
         ref={containerRef}
         boxSizing={"border-box"}

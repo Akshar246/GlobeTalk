@@ -25,6 +25,7 @@ import translateRoute from "./routes/translate.js";
 import userRoute from "./routes/user.js";
 import chatRoute from "./routes/chat.js";
 import adminRoute from "./routes/admin.js";
+import aiRoute from "./routes/ai.js";
 import { User } from "./models/user.js";
 import { Translate } from "@google-cloud/translate/build/src/v2/index.js";
 
@@ -91,6 +92,7 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/chat", chatRoute);
 app.use("/api/v1/admin", adminRoute);
 app.use("/api/v1/translate", translateRoute);
+app.use("/api/v1/ai", aiRoute);
 
 app.get("/", (req, res) => {
   res.status(200).json({
