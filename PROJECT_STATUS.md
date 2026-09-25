@@ -6,7 +6,7 @@
 ---
 
 ## Last Updated
-2026-09-23 — Day 2 complete ✅
+2026-09-25 — Days 3–6 complete ✅, AI bugs being fixed
 
 ## Live URLs
 - Frontend (Vercel): https://globe-talk-brown.vercel.app ✅ LIVE
@@ -16,40 +16,77 @@
 ---
 
 ## Completed ✅
-- Core MERN stack chat application
+
+### Core App
+- MERN stack chat app — login, signup, friend requests, group chats
 - Real-time messaging via Socket.IO
-- Server-side per-recipient translation (app.js lines 106–191)
-- Language selection at signup (Login.jsx)
-- Language stored in MongoDB User model
-- Message "Show original / Show translation" toggle (MessageComponent.jsx)
 - File attachments via Cloudinary + multer
 - Admin dashboard with Chart.js analytics
-- Friend request system
-- Group chat creation and management
-- **[Day 1]** Removed dead code, fixed typos, created env examples and README
-- **[Day 2]** Deployed MongoDB Atlas, Render (Backend), and Vercel (Frontend)
+
+### Translation System
+- Server-side per-recipient translation on NEW_MESSAGE (app.js socket handler)
+- Server-side translation for historical messages in getMessages controller
+- Language stored in User model (MongoDB)
+- Language picker at signup (Login.jsx)
+- In-app language switcher in Header (PATCH /api/v1/user/language)
+- Message "Show original / Show translation" toggle (MessageComponent.jsx)
+- RTK Query Message cache invalidated on language change (no more blank page)
+
+### AI Features
+- POST /api/v1/ai/summarise — Gemini reads last 50 messages → bullet-point summary
+- POST /api/v1/ai/smartreply — Gemini reads last 10 messages → 3 reply chips
+- AISummariser.jsx component — ✨ AI button in orange chat bar
+- Smart reply chips pre-fill message input on click
+- Uses new @google/genai SDK (NOT legacy @google/generative-ai)
+- Model fallback list: gemini-3.8-flash → gemini-3.7-flash → gemini-3.5-flash-lite
+- Exponential backoff retry for 503/429 errors
+
+### Bug Fixes Done
+- CORS: Added PATCH method + correct Vercel URL to corsOptions
+- Keep-alive ping every 14min (prevents Render free tier sleeping)
+- /health endpoint on backend
+- Search: excluded logged-in user from own results ($nin includes req.user)
+- Notifications: invalidate User RTK cache on NEW_REQUEST socket event + toast
+- Language change: invalidate Message cache → no blank page
+- Cloudinary error message now exposes real reason
+- Removed console.log(language) debug from newUser controller
+- Removed unused uuid import from user routes
+- Search.jsx: null guard, loading spinner, empty state, autoFocus, 500ms debounce
+
+### Deployment
+- Backend: Render.com (Node.js free tier, auto-deploy from main branch)
+- Frontend: Vercel (Vite, auto-deploy from main branch)
+- MongoDB: Atlas M0 free cluster (arivo-cluster), GlobeTalk database
 
 ---
 
 ## In Progress 🔄
-- Day 3: Fix Translation Pipeline (server-side for old messages)
+- Day 5/6: AI features — Gemini SDK migrated, testing in progress
 
 ---
 
 ## Next Up 📋
-1. Day 3 — Remove client-side batch translation in Chat.jsx (lines ~470)
-2. Day 3 — Update getMessages controller to translate historical messages server-side
-3. Day 3 — Wire it together and test with two languages
+1. Day 7 — Voice-to-Text (Web Speech API, zero cost, browser-native)
+2. Day 8 — UI/UX Overhaul (dark mode, better bubbles, mobile)
+3. Day 9 — Read Receipts (✓✓ ticks)
+4. Day 10 — Portfolio Polish (final README, LinkedIn, screenshots)
 
 ---
 
-## Known Issues / Decisions Made
-- `Client/versel.json` is misspelled — must rename to `vercel.json`
-- Old messages (loaded from MongoDB) are translated client-side in Chat.jsx via a
-  batch useEffect (lines 470–513). This is slow. Fix: translate server-side in getMessages controller.
-- Chat.jsx has ~265 lines of commented-out legacy code at the top. Must delete.
-- app.js has ~85 lines of commented-out socket code (lines 222–306). Must delete.
-- No AI routes exist yet. Target file: Server/routes/ai.js
+## 10-Day Roadmap
+
+| Day | Task | Status |
+|---|---|---|
+| 1 | Foundation & Cleanup | ✅ Done |
+| 2 | Free Deployment (Atlas + Render + Vercel) | ✅ Done |
+| 3 | Server-side Translation Pipeline | ✅ Done |
+| 4 | In-app Language Switcher | ✅ Done |
+| 5 | AI: Conversation Summariser (Gemini) | ✅ Done |
+| 6 | AI: Smart Reply Suggestions (Gemini) | ✅ Done |
+| 7 | AI: Voice-to-Text (Web Speech API) | ⬜ Next |
+| 8 | UI/UX Overhaul | ⬜ |
+| 9 | Read Receipts + Admin Upgrade | ⬜ |
+| 10 | GitHub Portfolio Polish | ⬜ |
 
 ---
 
@@ -57,52 +94,50 @@
 
 | Purpose | File | Notes |
 |---|---|---|
-| Real-time socket + translation | `Server/app.js` lines 106–191 | Per-recipient translate on NEW_MESSAGE |
-| Chat page | `Client/src/pages/Chat.jsx` | Has dead code to remove |
-| Message rendering + toggle | `Client/src/components/shared/MessageComponent.jsx` | Already has original/translated toggle |
+| Socket + real-time translate | `Server/app.js` lines ~106–191 | Per-recipient translate on NEW_MESSAGE |
+| Chat page | `Client/src/pages/Chat.jsx` | Has AISummariser wired in |
+| AI summariser UI | `Client/src/components/specific/AISummariser.jsx` | ✨ button + dialog |
+| AI controller | `Server/controllers/ai.js` | Gemini, retry, fallback models |
+| AI routes | `Server/routes/ai.js` | POST /summarise, POST /smartreply |
+| Message component | `Client/src/components/shared/MessageComponent.jsx` | Has original/translated toggle |
 | Translate API route | `Server/routes/translate.js` | Rate limited, 12 languages |
-| User model | `Server/models/user.js` | Has `language` field already |
-| Message model | `Server/models/message.js` | Needs `readBy` field for read receipts |
-| Header (navbar) | `Client/src/components/layout/Header.jsx` | Needs language picker added |
-| AI routes | `Server/routes/ai.js` | **Does not exist yet — to be created** |
+| User model | `Server/models/user.js` | Has language field |
+| Header | `Client/src/components/layout/Header.jsx` | Language picker dropdown |
+| Redux API | `Client/src/redux/api/api.js` | All RTK Query endpoints incl. AI |
+| AppLayout | `Client/src/components/layout/AppLayout.jsx` | Socket events, notification badge |
 
 ---
 
-## 10-Day Roadmap Summary
+## Critical Technical Decisions
 
-| Day | Task | Status |
-|---|---|---|
-| 1 | Foundation & Cleanup | ✅ Done |
-| 2 | Free Deployment (Atlas + Render + Vercel) | ✅ Done |
-| 3 | Fix Translation Pipeline (server-side for old messages) | 🔄 Next |
-| 4 | In-app Language Switcher in Header | ⬜ |
-| 5 | AI Feature 1: Conversation Summariser (Gemini) | ⬜ |
-| 6 | AI Feature 2: Smart Reply Suggestions (Gemini) | ⬜ |
-| 7 | AI Feature 3: Voice-to-Text (Web Speech API) | ⬜ |
-| 8 | UI/UX Overhaul (dark mode, MUI theme, mobile) | ⬜ |
-| 9 | Admin Dashboard Upgrade + Read Receipts | ⬜ |
-| 10 | GitHub Portfolio Polish + Final README | ⬜ |
+- **Gemini SDK**: Use `@google/genai` (new unified SDK), NOT `@google/generative-ai` (legacy)
+- **Gemini model**: Use `gemini-3.8-flash` with fallback to `gemini-3.7-flash`, `gemini-3.5-flash-lite`
+- **CORS**: Both `app.js` AND `constants/config.js` must have Vercel URL + PATCH method
+- **Cookie**: Name is `Globe-token`, sameSite: "none", secure: true (required for cross-domain)
+- **DB name**: Hardcoded as `"GlobeTalk"` in `connectDB` — MONGO_URI just needs cluster URL
+- **emitEvent**: Only works in HTTP route controllers (has req object). Socket handlers access io directly.
+- **RTK Query cache**: Invalidate `["Message"]` on language change, `["User"]` on new friend request
 
 ---
 
 ## Environment Variables Reference
 
-### Server (.env)
+### Server (.env / Render)
 ```
-MONGO_URI=
-PORT=3000
-JWT_SECRET=
-ADMIN_SECRET_KEY=
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-GOOGLE_API_KEY=          ← Google Cloud Translate
-GEMINI_API_KEY=          ← Google AI Studio (to be added Day 5)
-CLIENT_URL=
-NODE_ENV=
+MONGO_URI=mongodb+srv://user:pass@arivo-cluster.n3fkzq1.mongodb.net/GlobeTalk
+PORT=10000
+JWT_SECRET=<long random string>
+ADMIN_SECRET_KEY=<long random string>
+CLOUDINARY_CLOUD_NAME=<from cloudinary dashboard>
+CLOUDINARY_API_KEY=<from cloudinary dashboard>
+CLOUDINARY_API_SECRET=<from cloudinary dashboard>
+GOOGLE_API_KEY=<Google Cloud Translate API key>
+GEMINI_API_KEY=<Google AI Studio key — aistudio.google.com>
+CLIENT_URL=https://globe-talk-brown.vercel.app
+NODE_ENV=PRODUCTION
 ```
 
-### Client (.env)
+### Client (.env / Vercel)
 ```
-VITE_SERVER=
+VITE_SERVER=https://globetalk-server-7n6b.onrender.com
 ```
