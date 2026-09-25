@@ -39,7 +39,6 @@ const AISummariser = ({ chatId, onSmartReply }) => {
     setReplies([]);
 
     try {
-      // Run both in parallel
       const [sumRes, replyRes] = await Promise.all([
         summarise(chatId).unwrap(),
         getSmartReplies(chatId).unwrap(),
@@ -48,7 +47,9 @@ const AISummariser = ({ chatId, onSmartReply }) => {
       setMsgCount(sumRes.messageCount);
       setReplies(replyRes.replies || []);
     } catch (err) {
-      toast.error("AI unavailable — please try again shortly");
+      const msg =
+        err?.data?.message || err?.error || "AI unavailable — check your API key on Render";
+      toast.error(msg);
       setOpen(false);
     }
   };
