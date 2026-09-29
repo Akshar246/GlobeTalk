@@ -1,127 +1,122 @@
 import { useEffect, useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
-import { LockOutlined as LockOutlinedIcon, MessageOutlined as MessageOutlinedIcon } from "@mui/icons-material";
-import axios from "axios";
-import { server } from "../constants/config";
-import toast from "react-hot-toast";
+import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import {
+  MessageOutlined as MessageIcon,
+  AutoAwesome as SparkleIcon,
+  Translate as TranslateIcon,
+} from "@mui/icons-material";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-
-const originalLabels = {
-  title: "Welcome to GlobeTalk",
-  subtitle:
-    "Select a chat from the left panel and start messaging. Each person can read in their preferred language.",
-  action: "Go to Groups",
-  privacy: "Your personal messages stay private and secure.",
-};
 
 const Home = () => {
   const navigate = useNavigate();
-  const [translated, setTranslated] = useState(originalLabels);
-  const preferredLanguage = localStorage.getItem("preferredLanguage") || "en";
-
-  const translateLabels = async () => {
-    if (preferredLanguage === "en") {
-      setTranslated(originalLabels);
-      return;
-    }
-
-    try {
-      const { data } = await axios.post(`${server}/api/v1/translate`, {
-        text: Object.values(originalLabels),
-        targetLanguage: preferredLanguage,
-      });
-
-      const newTranslated = {};
-      Object.keys(originalLabels).forEach((key, idx) => {
-        newTranslated[key] = data.translations[idx];
-      });
-
-      setTranslated(newTranslated);
-    } catch (error) {
-      console.error("Home translation error:", error);
-      toast.error("Failed to translate homepage");
-    }
-  };
-
-  useEffect(() => {
-    translateLabels();
-  }, [preferredLanguage]);
+  const theme    = useTheme();
+  const isDark   = theme.palette.mode === "dark";
 
   return (
     <Box
       sx={{
         height: "100%",
-        width: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: "#f0f2f5",
-        p: 2,
+        bgcolor: "background.default",
+        backgroundImage: isDark
+          ? "radial-gradient(circle, rgba(79,70,229,0.06) 1px, transparent 1px)"
+          : "radial-gradient(circle, rgba(79,70,229,0.07) 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+        p: 3,
       }}
     >
-      <Paper
-        elevation={0}
-        sx={{
-          width: "100%",
-          maxWidth: 620,
-          borderRadius: 4,
-          border: "1px solid #dde5ee",
-          p: { xs: 3, sm: 4 },
-          textAlign: "center",
-          bgcolor: "#fff",
-        }}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <Stack spacing={2} alignItems="center">
+        <Stack alignItems="center" spacing={3} sx={{ maxWidth: 480, textAlign: "center" }}>
+          {/* Icon */}
           <Box
             sx={{
-              width: 70,
-              height: 70,
-              borderRadius: "50%",
-              bgcolor: "#e9f2ff",
-              display: "grid",
-              placeItems: "center",
+              width: 80,
+              height: 80,
+              borderRadius: "24px",
+              background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 8px 32px rgba(79,70,229,0.35)",
             }}
           >
-            <MessageOutlinedIcon sx={{ fontSize: "2rem", color: "#1359a1" }} />
+            <MessageIcon sx={{ fontSize: "2.2rem", color: "white" }} />
           </Box>
 
-          <Typography
-            sx={{
-              fontSize: { xs: "1.45rem", sm: "1.7rem" },
-              fontWeight: 700,
-              color: "#1f2937",
-            }}
-          >
-            {translated.title}
-          </Typography>
+          {/* Heading */}
+          <Box>
+            <Typography
+              variant="h5"
+              fontWeight={700}
+              color="text.primary"
+              gutterBottom
+            >
+              Welcome to GlobeTalk 🌐
+            </Typography>
+            <Typography variant="body2" color="text.secondary" lineHeight={1.7}>
+              Select a conversation from the sidebar to start chatting. Each person reads messages in their own preferred language — automatically.
+            </Typography>
+          </Box>
 
-          <Typography sx={{ color: "#5f6b7a", maxWidth: 520 }}>
-            {translated.subtitle}
-          </Typography>
+          {/* Feature pills */}
+          <Stack direction="row" flexWrap="wrap" gap={1} justifyContent="center">
+            {[
+              { icon: <TranslateIcon sx={{ fontSize: "0.85rem" }} />, label: "Auto-translation" },
+              { icon: <SparkleIcon sx={{ fontSize: "0.85rem" }} />, label: "AI Summaries" },
+              { icon: <SparkleIcon sx={{ fontSize: "0.85rem" }} />, label: "Smart Replies" },
+            ].map((pill) => (
+              <Stack
+                key={pill.label}
+                direction="row"
+                alignItems="center"
+                spacing={0.6}
+                sx={{
+                  bgcolor: isDark ? "rgba(79,70,229,0.15)" : "rgba(79,70,229,0.08)",
+                  border: "1px solid",
+                  borderColor: isDark ? "rgba(79,70,229,0.3)" : "rgba(79,70,229,0.2)",
+                  borderRadius: 99,
+                  px: 1.5,
+                  py: 0.5,
+                  color: "#7C3AED",
+                }}
+              >
+                {pill.icon}
+                <Typography variant="caption" fontWeight={600} sx={{ color: isDark ? "#A5B4FC" : "#4F46E5" }}>
+                  {pill.label}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
 
           <Button
             variant="contained"
             onClick={() => navigate("/groups")}
             sx={{
+              background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+              borderRadius: "10px",
+              px: 4,
+              py: 1.2,
+              fontWeight: 700,
               textTransform: "none",
-              borderRadius: 99,
-              px: 2.5,
-              bgcolor: "#1565c0",
-              "&:hover": { bgcolor: "#0f4f97" },
+              boxShadow: "0 4px 16px rgba(79,70,229,0.35)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #3730A3 0%, #6D28D9 100%)",
+                boxShadow: "0 6px 20px rgba(79,70,229,0.45)",
+              },
             }}
           >
-            {translated.action}
+            Explore Groups →
           </Button>
-
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ pt: 1 }}>
-            <LockOutlinedIcon sx={{ fontSize: "1rem", color: "#6b7280" }} />
-            <Typography sx={{ color: "#6b7280", fontSize: "0.88rem" }}>
-              {translated.privacy}
-            </Typography>
-          </Stack>
         </Stack>
-      </Paper>
+      </motion.div>
     </Box>
   );
 };
