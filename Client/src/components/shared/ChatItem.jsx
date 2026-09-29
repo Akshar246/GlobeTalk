@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Link } from "../styles/StyledComponents";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, useTheme } from "@mui/material";
 import AvatarCard from "./AvatarCard";
 import { motion } from "framer-motion";
 
@@ -15,50 +15,105 @@ const ChatItem = ({
   index = 0,
   handleDeleteChat,
 }) => {
+  const theme  = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
+  // Active state colours
+  const activeBg    = isDark
+    ? "linear-gradient(135deg, rgba(79,70,229,0.35) 0%, rgba(124,58,237,0.2) 100%)"
+    : "linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)";
+  const activeLeft  = "3px solid #4F46E5";
+  const hoverBg     = isDark ? "rgba(255,255,255,0.04)" : "rgba(79,70,229,0.05)";
+  const textColor   = isDark ? "#F1F0FF" : "#111827";
+  const subColor    = isDark ? "#8B8FA8" : "#6B7280";
+
   return (
     <Link
-      sx={{
-        padding: "0",
-      }}
       to={`/chat/${_id}`}
+      sx={{ padding: "0", textDecoration: "none" }}
       onContextMenu={(e) => handleDeleteChat(e, _id, groupChat)}
     >
       <motion.div
-        initial={{ opacity: 0, y: "-100%" }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 * index }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.04, duration: 0.25 }}
         style={{
           display: "flex",
-          gap: "1rem",
           alignItems: "center",
-          backgroundColor: sameSender ? "black" : "unset",
-          color: sameSender ? "white" : "unset",
+          gap: "0.85rem",
+          background: sameSender ? activeBg : "transparent",
+          borderLeft: sameSender ? activeLeft : "3px solid transparent",
+          padding: "0.75rem 1rem",
+          cursor: "pointer",
           position: "relative",
-          padding: "1rem",
+          transition: "background 0.15s ease",
         }}
+        whileHover={{ background: sameSender ? activeBg : hoverBg }}
       >
-        <AvatarCard avatar={avatar} />
+        {/* Avatar */}
+        <Box sx={{ position: "relative", flexShrink: 0 }}>
+          <AvatarCard avatar={avatar} />
+          {/* Online indicator */}
+          {isOnline && (
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 1,
+                right: 1,
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                bgcolor: "#10B981",
+                border: `2px solid ${isDark ? "#14152A" : "#FFFFFF"}`,
+              }}
+            />
+          )}
+        </Box>
 
-        <Stack>
-          <Typography>{name}</Typography>
+        {/* Name + preview */}
+        <Stack sx={{ overflow: "hidden", flex: 1 }} spacing={0.25}>
+          <Typography
+            variant="body2"
+            fontWeight={sameSender ? 700 : 500}
+            noWrap
+            sx={{ color: textColor, fontSize: "0.92rem" }}
+          >
+            {name}
+          </Typography>
+
           {newMessageAlert && (
-            <Typography>{newMessageAlert.count} New Message</Typography>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                color: "#4F46E5",
+                fontWeight: 600,
+                fontSize: "0.72rem",
+              }}
+            >
+              {newMessageAlert.count} new {newMessageAlert.count === 1 ? "message" : "messages"}
+            </Typography>
           )}
         </Stack>
 
-        {isOnline && (
+        {/* Unread badge */}
+        {newMessageAlert && (
           <Box
             sx={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              backgroundColor: "green",
-              position: "absolute",
-              top: "50%",
-              right: "1rem",
-              transform: "translateY(-50%)",
+              minWidth: 20,
+              height: 20,
+              borderRadius: 99,
+              bgcolor: "#4F46E5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
             }}
-          />
+          >
+            <Typography sx={{ color: "#fff", fontSize: "0.65rem", fontWeight: 700 }}>
+              {newMessageAlert.count}
+            </Typography>
+          </Box>
         )}
       </motion.div>
     </Link>

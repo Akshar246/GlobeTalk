@@ -1,4 +1,4 @@
-import { Drawer, Grid, Skeleton } from "@mui/material";
+import { Box, Drawer, Grid, Skeleton, useTheme } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,19 +30,21 @@ import Header from "./Header";
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
-    const params = useParams();
+    const params   = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const socket = getSocket();
+    const socket   = getSocket();
+    const theme    = useTheme();
+    const isDark   = theme.palette.mode === "dark";
 
-    const chatId = params.chatId;
+    const chatId           = params.chatId;
     const deleteMenuAnchor = useRef(null);
 
     const [onlineUsers, setOnlineUsers] = useState([]);
 
-    const { isMobile } = useSelector((state) => state.misc);
-    const { user } = useSelector((state) => state.auth);
-    const { newMessagesAlert } = useSelector((state) => state.chat);
+    const { isMobile } = useSelector((s) => s.misc);
+    const { user }     = useSelector((s) => s.auth);
+    const { newMessagesAlert } = useSelector((s) => s.chat);
 
     const { isLoading, data, isError, error, refetch } = useMyChatsQuery("");
 
@@ -64,19 +66,15 @@ const AppLayout = () => (WrappedComponent) => {
       (data) => {
         if (data.chatId === chatId) return;
         dispatch(setNewMessagesAlert(data));
-        toast("New message received", {
-          id: `new-message-${data.chatId}`,
-          icon: "💬",
-        });
+        toast("New message received", { id: `new-message-${data.chatId}`, icon: "💬" });
       },
       [chatId, dispatch]
     );
 
     const newRequestListener = useCallback(() => {
       dispatch(incrementNotification());
-      // Invalidate notification cache so dialog shows fresh data immediately
       dispatch(api.util.invalidateTags(["User"]));
-      toast("New friend request received!", { icon: "👋" });
+      toast("New friend request!", { icon: "👋" });
     }, [dispatch]);
 
     const refetchListener = useCallback(() => {
@@ -90,29 +88,38 @@ const AppLayout = () => (WrappedComponent) => {
 
     const eventHandlers = {
       [NEW_MESSAGE_ALERT]: newMessageAlertListener,
-      [NEW_REQUEST]: newRequestListener,
-      [REFETCH_CHATS]: refetchListener,
-      [ONLINE_USERS]: onlineUsersListener,
+      [NEW_REQUEST]:       newRequestListener,
+      [REFETCH_CHATS]:     refetchListener,
+      [ONLINE_USERS]:      onlineUsersListener,
     };
 
     useSocketEvents(socket, eventHandlers);
 
+    // Sidebar background
+    const sidebarBg  = isDark ? "#14152A" : "#FFFFFF";
+    const profileBg  = isDark
+      ? "linear-gradient(180deg, #1A1B2E 0%, #0F0F1A 100%)"
+      : "linear-gradient(180deg, #EEF2FF 0%, #F5F6FA 100%)";
+    const appBg      = isDark ? "#0F0F1A" : "#F5F6FA";
+
     return (
-      <>
+      <Box sx={{ bgcolor: appBg, minHeight: "100vh" }}>
         <Title />
         <Header />
 
-        <DeleteChatMenu
-          dispatch={dispatch}
-          deleteMenuAnchor={deleteMenuAnchor}
-        />
+        <DeleteChatMenu dispatch={dispatch} deleteMenuAnchor={deleteMenuAnchor} />
 
+        {/* Mobile drawer */}
         {isLoading ? (
           <Skeleton />
         ) : (
-          <Drawer open={isMobile} onClose={handleMobileClose}>
+          <Drawer
+            open={isMobile}
+            onClose={handleMobileClose}
+            PaperProps={{ sx: { bgcolor: sidebarBg, width: "80vw" } }}
+          >
             <ChatList
-              w="70vw"
+              w="100%"
               chats={data?.chats}
               chatId={chatId}
               handleDeleteChat={handleDeleteChat}
@@ -122,18 +129,21 @@ const AppLayout = () => (WrappedComponent) => {
           </Drawer>
         )}
 
-        <Grid container height={"calc(100vh - 4rem)"}>
+        {/* Desktop layout */}
+        <Grid container height="calc(100vh - 4rem)">
+          {/* ── Sidebar ─────────────────────────────────────── */}
           <Grid
-            item
-            sm={4}
-            md={3}
+            item sm={4} md={3}
+            height="100%"
             sx={{
               display: { xs: "none", sm: "block" },
+              bgcolor: sidebarBg,
+              borderRight: `1px solid ${isDark ? "#2D2F4A" : "#E5E7EB"}`,
+              overflow: "hidden",
             }}
-            height={"100%"}
           >
             {isLoading ? (
-              <Skeleton />
+              <Skeleton variant="rectangular" height="100%" />
             ) : (
               <ChatList
                 chats={data?.chats}
@@ -144,25 +154,35 @@ const AppLayout = () => (WrappedComponent) => {
               />
             )}
           </Grid>
-          <Grid item xs={12} sm={8} md={5} lg={6} height={"100%"}>
+
+          {/* ── Chat Area ────────────────────────────────────── */}
+          <Grid
+            item xs={12} sm={8} md={5} lg={6}
+            height="100%"
+            sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+          >
             <WrappedComponent {...props} chatId={chatId} user={user} />
           </Grid>
 
+          {/* ── Profile Panel ────────────────────────────────── */}
           <Grid
-            item
-            md={4}
-            lg={3}
-            height={"100%"}
+            item md={4} lg={3}
+            height="100%"
             sx={{
-              display: { xs: "none", md: "block" },
-              padding: "2rem",
-              bgcolor: "rgba(0,0,0,0.85)",
+              display: { xs: "none", md: "flex" },
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: profileBg,
+              borderLeft: `1px solid ${isDark ? "#2D2F4A" : "#E5E7EB"}`,
+              padding: "2rem 1.5rem",
+              overflow: "auto",
             }}
           >
             <Profile user={user} />
           </Grid>
         </Grid>
-      </>
+      </Box>
     );
   };
 };

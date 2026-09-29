@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, useTheme } from "@mui/material";
 import React, { memo, useMemo, useState } from "react";
 import moment from "moment";
 import { fileFormat } from "../../lib/features";
@@ -15,13 +15,14 @@ const MessageComponent = ({ message, user }) => {
     createdAt,
   } = message;
 
+  const theme     = useTheme();
+  const isDark    = theme.palette.mode === "dark";
   const sameSender = sender?._id === user?._id;
-  const [showOriginal, setShowOriginal] = useState(false);
 
-  // Clean time format like 14:30
+  const [showOriginal, setShowOriginal] = useState(false);
   const timeAgo = moment(createdAt).format("HH:mm");
 
-  const resolvedOriginal = originalContent || content || "";
+  const resolvedOriginal   = originalContent || content || "";
   const resolvedTranslated = translatedContent || content || "";
 
   const hasTranslationToggle = useMemo(
@@ -33,98 +34,126 @@ const MessageComponent = ({ message, user }) => {
     [sameSender, resolvedOriginal, resolvedTranslated]
   );
 
-  const displayContent =
-    hasTranslationToggle && showOriginal ? resolvedOriginal : resolvedTranslated;
+  const displayContent = hasTranslationToggle && showOriginal
+    ? resolvedOriginal
+    : resolvedTranslated;
+
+  // ── Bubble styles ────────────────────────────────────────────────────────────
+  const sentBg   = "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)";
+  const recvBg   = isDark ? "#1E2140" : "#FFFFFF";
+  const sentText = "#FFFFFF";
+  const recvText = isDark ? "#F1F0FF" : "#111827";
+  const sentShadow = "0 4px 15px rgba(79,70,229,0.35)";
+  const recvShadow = isDark
+    ? "0 2px 8px rgba(0,0,0,0.4)"
+    : "0 2px 8px rgba(0,0,0,0.08)";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       style={{
         alignSelf: sameSender ? "flex-end" : "flex-start",
-        backgroundColor: sameSender ? "#dcf8c6" : "#ffffff", // WhatsApp Green for sent, White for received
-        color: "#111b21",
-        borderRadius: sameSender ? "12px 12px 0px 12px" : "12px 12px 12px 0px", // Chat bubble tails
-        padding: "0.5rem 0.75rem",
-        width: "fit-content",
-        maxWidth: "80%",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
-        position: "relative",
+        maxWidth: "72%",
         display: "flex",
         flexDirection: "column",
-        gap: "0.15rem",
+        alignItems: sameSender ? "flex-end" : "flex-start",
       }}
     >
-      {/* Sender Name (Only for received messages in group chats) */}
+      {/* Sender label for group chats */}
       {!sameSender && (
         <Typography
           variant="caption"
-          sx={{ color: "#1976d2", fontWeight: 600, fontSize: "0.75rem", mb: 0.25 }}
+          sx={{
+            color: "#7C3AED",
+            fontWeight: 700,
+            fontSize: "0.72rem",
+            ml: 1.5,
+            mb: 0.3,
+          }}
         >
           {sender.name}
         </Typography>
       )}
 
-      {/* Attachments */}
-      {attachments.length > 0 &&
-        attachments.map((attachment, index) => {
-          const url = attachment.url;
-          const file = fileFormat(url);
-          return (
-            <Box key={index} sx={{ mb: 0.5 }}>
-              <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "black" }}>
-                {RenderAttachment(file, url)}
-              </a>
-            </Box>
-          );
-        })}
+      {/* The bubble */}
+      <Box
+        sx={{
+          background: sameSender ? sentBg : recvBg,
+          color: sameSender ? sentText : recvText,
+          borderRadius: sameSender ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+          px: 2,
+          py: 1.25,
+          boxShadow: sameSender ? sentShadow : recvShadow,
+          position: "relative",
+        }}
+      >
+        {/* Attachments */}
+        {attachments.length > 0 &&
+          attachments.map((attachment, index) => {
+            const url  = attachment.url;
+            const file = fileFormat(url);
+            return (
+              <Box key={index} sx={{ mb: content ? 1 : 0 }}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: sameSender ? "white" : "inherit" }}
+                >
+                  {RenderAttachment(file, url)}
+                </a>
+              </Box>
+            );
+          })}
 
-      {/* Message Text & Timestamp Wrapper */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "0.5rem" }}>
-        {displayContent && (
+        {/* Text + timestamp row */}
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "0.4rem" }}>
+          {displayContent && (
+            <Typography
+              variant="body2"
+              sx={{ fontSize: "0.93rem", lineHeight: 1.5, wordBreak: "break-word" }}
+            >
+              {displayContent}
+            </Typography>
+          )}
           <Typography
-            variant="body1"
-            sx={{ fontSize: "0.95rem", lineHeight: 1.4, wordBreak: "break-word" }}
+            variant="caption"
+            sx={{
+              fontSize: "0.65rem",
+              opacity: 0.7,
+              marginLeft: "auto",
+              lineHeight: 1,
+              position: "relative",
+              top: "2px",
+              whiteSpace: "nowrap",
+            }}
           >
-            {displayContent}
+            {timeAgo}
           </Typography>
+        </Box>
+
+        {/* Translation toggle */}
+        {hasTranslationToggle && (
+          <Button
+            size="small"
+            onClick={() => setShowOriginal((p) => !p)}
+            sx={{
+              minWidth: "unset",
+              p: 0,
+              mt: 0.5,
+              textTransform: "none",
+              fontSize: "0.72rem",
+              color: isDark ? "#A5B4FC" : "#4F46E5",
+              fontWeight: 600,
+              alignSelf: "flex-start",
+            }}
+          >
+            {showOriginal ? "Show translation ↩" : "Show original ↪"}
+          </Button>
         )}
-
-        {/* Timestamp */}
-        <Typography
-          variant="caption"
-          sx={{
-            color: "#667781",
-            fontSize: "0.65rem",
-            marginLeft: "auto", // Pushes timestamp to the right corner
-            position: "relative",
-            top: "4px",
-            lineHeight: 1,
-          }}
-        >
-          {timeAgo}
-        </Typography>
       </Box>
-
-      {/* Translation Toggle Button */}
-      {hasTranslationToggle && (
-        <Button
-          size="small"
-          onClick={() => setShowOriginal((prev) => !prev)}
-          sx={{
-            minWidth: "unset",
-            p: 0,
-            textTransform: "none",
-            fontSize: "0.75rem",
-            color: "#027eb5",
-            alignSelf: "flex-start",
-            mt: 0.5,
-          }}
-        >
-          {showOriginal ? "Show translation" : "Show original"}
-        </Button>
-      )}
     </motion.div>
   );
 };

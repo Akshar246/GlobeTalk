@@ -7,12 +7,11 @@ import React, {
 } from "react";
 import AppLayout from "../components/layout/AppLayout";
 import { IconButton, Skeleton, Stack, Box } from "@mui/material";
-import { grayColor, orange } from "../constants/color";
 import {
   AttachFile as AttachFileIcon,
   Send as SendIcon,
 } from "@mui/icons-material";
-import { InputBox } from "../components/styles/StyledComponents";
+
 import FileMenu from "../components/dialogs/FileMenu";
 import MessageComponent from "../components/shared/MessageComponent";
 import { getSocket } from "../socket";
@@ -186,17 +185,23 @@ const Chat = ({ chatId, user }) => {
   const allMessages = [...oldMessages, ...messages];
 
   return chatDetails.isLoading ? (
-    <Skeleton />
+    <Skeleton variant="rectangular" height="100%" />
   ) : (
-    <Box display="flex" flexDirection="column" height="100%">
-      {/* ── AI top bar ──────────────────────────────────────────────────────── */}
+    <Box display="flex" flexDirection="column" height="100%"
+      sx={{ bgcolor: "background.default" }}
+    >
+      {/* ── AI top bar ──────────────────────────────────────────────── */}
       <Stack
         direction="row"
         alignItems="center"
         justifyContent="flex-end"
         px={2}
         py={0.75}
-        sx={{ bgcolor: orange, minHeight: "2.8rem", flexShrink: 0 }}
+        sx={{
+          background: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+          minHeight: "2.8rem",
+          flexShrink: 0,
+        }}
       >
         {chatId && (
           <AISummariser
@@ -206,55 +211,71 @@ const Chat = ({ chatId, user }) => {
         )}
       </Stack>
 
-      {/* ── Message List Area ───────────────────────────────────────────────── */}
+      {/* ── Messages ────────────────────────────────────────────────── */}
       <Stack
         ref={containerRef}
-        boxSizing={"border-box"}
-        padding={"1.5rem 1rem"}
-        spacing={"0.5rem"}
-        bgcolor={"#efeae2"} // WhatsApp web chat background
+        boxSizing="border-box"
+        padding="1.5rem 1.25rem"
+        spacing="0.6rem"
         sx={{
           flexGrow: 1,
           overflowX: "hidden",
           overflowY: "auto",
+          bgcolor: "background.default",
+          // Subtle dot grid pattern — premium touch
+          backgroundImage: (theme) =>
+            theme.palette.mode === "dark"
+              ? "radial-gradient(circle, rgba(79,70,229,0.06) 1px, transparent 1px)"
+              : "radial-gradient(circle, rgba(79,70,229,0.07) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
         }}
       >
         {allMessages.map((i) => (
           <MessageComponent key={i._id} message={i} user={user} />
         ))}
-
         {userTyping && <TypingLoader />}
-
         <div ref={bottomRef} />
       </Stack>
 
-      {/* ── Input Area ──────────────────────────────────────────────────────── */}
+      {/* ── Input bar ───────────────────────────────────────────────── */}
       <form onSubmit={submitHandler} style={{ flexShrink: 0 }}>
         <Stack
-          direction={"row"}
-          padding={"0.75rem 1rem"}
-          alignItems={"center"}
-          bgcolor={"#f0f2f5"}
+          direction="row"
+          alignItems="center"
           spacing={1}
+          sx={{
+            px: 1.5,
+            py: 1,
+            bgcolor: "background.paper",
+            borderTop: (theme) =>
+              `1px solid ${theme.palette.mode === "dark" ? "#2D2F4A" : "#E5E7EB"}`,
+          }}
         >
-          <IconButton onClick={handleFileOpen} sx={{ color: "#54656f", p: "0.5rem" }}>
+          <IconButton
+            onClick={handleFileOpen}
+            sx={{ color: "text.secondary" }}
+          >
             <AttachFileIcon sx={{ rotate: "30deg" }} />
           </IconButton>
 
-          <InputBox
+          <Box
+            component="input"
             placeholder="Type a message..."
             value={message}
             onChange={messageOnChange}
-            style={{
+            sx={{
               flexGrow: 1,
-              borderRadius: "1.5rem",
-              padding: "0.75rem 1.25rem",
               border: "none",
               outline: "none",
-              backgroundColor: "#ffffff",
+              borderRadius: "12px",
+              px: 2,
+              py: 1.25,
               fontSize: "0.95rem",
-              color: "#111b21",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark" ? "#0F0F1A" : "#F5F6FA",
+              color: "text.primary",
+              "&::placeholder": { color: "text.secondary" },
+              boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)",
             }}
           />
 
@@ -262,16 +283,27 @@ const Chat = ({ chatId, user }) => {
             type="submit"
             disabled={!message.trim()}
             sx={{
-              bgcolor: message.trim() ? "#00a884" : "#e9edef",
-              color: message.trim() ? "white" : "#9ca3af",
-              padding: "0.6rem",
+              background: message.trim()
+                ? "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)"
+                : "transparent",
+              border: (theme) =>
+                message.trim()
+                  ? "none"
+                  : `1.5px solid ${theme.palette.mode === "dark" ? "#2D2F4A" : "#E5E7EB"}`,
+              color: message.trim() ? "white" : "text.secondary",
+              width: 44,
+              height: 44,
               transition: "all 0.2s",
+              boxShadow: message.trim() ? "0 4px 12px rgba(79,70,229,0.4)" : "none",
               "&:hover": {
-                bgcolor: message.trim() ? "#008f6f" : "#e9edef",
+                background: message.trim()
+                  ? "linear-gradient(135deg, #3730A3 0%, #6D28D9 100%)"
+                  : "transparent",
+                transform: message.trim() ? "scale(1.05)" : "none",
               },
             }}
           >
-            <SendIcon sx={{ rotate: "-30deg", transform: "translateX(2px)" }} />
+            <SendIcon sx={{ fontSize: "1.1rem" }} />
           </IconButton>
         </Stack>
       </form>
@@ -279,6 +311,7 @@ const Chat = ({ chatId, user }) => {
       <FileMenu anchorE1={fileMenuAnchor} chatId={chatId} />
     </Box>
   );
+
 };
 
 export default AppLayout()(Chat);
