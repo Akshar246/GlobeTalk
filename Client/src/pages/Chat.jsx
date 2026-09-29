@@ -1,10 +1,10 @@
 import React, {
-  Fragment,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
+
 import AppLayout from "../components/layout/AppLayout";
 import { IconButton, Skeleton, Stack, Box } from "@mui/material";
 import {
@@ -32,6 +32,8 @@ import { removeNewMessagesAlert } from "../redux/reducers/chat";
 import { TypingLoader } from "../components/layout/Loaders";
 import { useNavigate } from "react-router-dom";
 import AISummariser from "../components/specific/AISummariser";
+import VoiceInput from "../components/specific/VoiceInput";
+
 
 const Chat = ({ chatId, user }) => {
   const socket = getSocket();
@@ -279,6 +281,8 @@ const Chat = ({ chatId, user }) => {
             }}
           />
 
+          <VoiceInput onResult={(transcript) => setMessage((prev) => prev + transcript)} />
+
           <IconButton
             type="submit"
             disabled={!message.trim()}
@@ -306,6 +310,7 @@ const Chat = ({ chatId, user }) => {
             <SendIcon sx={{ fontSize: "1.1rem" }} />
           </IconButton>
         </Stack>
+
       </form>
 
       <FileMenu anchorE1={fileMenuAnchor} chatId={chatId} />

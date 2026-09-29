@@ -70,6 +70,7 @@ const api = createApi({
         credentials: "include",
       }),
       keepUnusedDataFor: 0,
+      providesTags: ["Message"],
     }),
 
     sendAttachments: builder.mutation({
