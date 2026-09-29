@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import AppLayout from "../components/layout/AppLayout";
-import { IconButton, Skeleton, Stack } from "@mui/material";
+import { IconButton, Skeleton, Stack, Box } from "@mui/material";
 import { grayColor, orange } from "../constants/color";
 import {
   AttachFile as AttachFileIcon,
@@ -188,7 +188,7 @@ const Chat = ({ chatId, user }) => {
   return chatDetails.isLoading ? (
     <Skeleton />
   ) : (
-    <Fragment>
+    <Box display="flex" flexDirection="column" height="100%">
       {/* ── AI top bar ──────────────────────────────────────────────────────── */}
       <Stack
         direction="row"
@@ -196,7 +196,7 @@ const Chat = ({ chatId, user }) => {
         justifyContent="flex-end"
         px={2}
         py={0.75}
-        sx={{ bgcolor: orange, minHeight: "2.8rem" }}
+        sx={{ bgcolor: orange, minHeight: "2.8rem", flexShrink: 0 }}
       >
         {chatId && (
           <AISummariser
@@ -206,14 +206,15 @@ const Chat = ({ chatId, user }) => {
         )}
       </Stack>
 
+      {/* ── Message List Area ───────────────────────────────────────────────── */}
       <Stack
         ref={containerRef}
         boxSizing={"border-box"}
-        padding={"1rem"}
-        spacing={"1rem"}
-        bgcolor={grayColor}
-        height={"90%"}
+        padding={"1.5rem 1rem"}
+        spacing={"0.5rem"}
+        bgcolor={"#efeae2"} // WhatsApp web chat background
         sx={{
+          flexGrow: 1,
           overflowX: "hidden",
           overflowY: "auto",
         }}
@@ -227,47 +228,56 @@ const Chat = ({ chatId, user }) => {
         <div ref={bottomRef} />
       </Stack>
 
-      <form style={{ height: "10%" }} onSubmit={submitHandler}>
+      {/* ── Input Area ──────────────────────────────────────────────────────── */}
+      <form onSubmit={submitHandler} style={{ flexShrink: 0 }}>
         <Stack
           direction={"row"}
-          height={"100%"}
-          padding={"1rem"}
+          padding={"0.75rem 1rem"}
           alignItems={"center"}
-          position={"relative"}
+          bgcolor={"#f0f2f5"}
+          spacing={1}
         >
-          <IconButton
-            sx={{ position: "absolute", left: "1.5rem", rotate: "30deg" }}
-            onClick={handleFileOpen}
-          >
-            <AttachFileIcon />
+          <IconButton onClick={handleFileOpen} sx={{ color: "#54656f", p: "0.5rem" }}>
+            <AttachFileIcon sx={{ rotate: "30deg" }} />
           </IconButton>
 
           <InputBox
-            placeholder="Type Message Here..."
+            placeholder="Type a message..."
             value={message}
             onChange={messageOnChange}
+            style={{
+              flexGrow: 1,
+              borderRadius: "1.5rem",
+              padding: "0.75rem 1.25rem",
+              border: "none",
+              outline: "none",
+              backgroundColor: "#ffffff",
+              fontSize: "0.95rem",
+              color: "#111b21",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+            }}
           />
 
           <IconButton
             type="submit"
+            disabled={!message.trim()}
             sx={{
-              rotate: "-30deg",
-              bgcolor: orange,
-              color: "white",
-              marginLeft: "1rem",
-              padding: "0.5rem",
+              bgcolor: message.trim() ? "#00a884" : "#e9edef",
+              color: message.trim() ? "white" : "#9ca3af",
+              padding: "0.6rem",
+              transition: "all 0.2s",
               "&:hover": {
-                bgcolor: "error.dark",
+                bgcolor: message.trim() ? "#008f6f" : "#e9edef",
               },
             }}
           >
-            <SendIcon />
+            <SendIcon sx={{ rotate: "-30deg", transform: "translateX(2px)" }} />
           </IconButton>
         </Stack>
       </form>
 
       <FileMenu anchorE1={fileMenuAnchor} chatId={chatId} />
-    </Fragment>
+    </Box>
   );
 };
 
