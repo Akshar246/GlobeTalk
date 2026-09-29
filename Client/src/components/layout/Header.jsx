@@ -22,6 +22,7 @@ import {
   Notifications as NotificationsIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
+  AccountCircle as AccountCircleIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -187,6 +188,12 @@ const Header = () => {
               icon={<NotificationsIcon />}
               onClick={openNotification}
               value={notificationCount}
+            />
+
+            <IconBtn
+              title="My Profile"
+              icon={<AccountCircleIcon />}
+              onClick={() => navigate("/profile")}
             />
 
             {/* Theme toggle */}
