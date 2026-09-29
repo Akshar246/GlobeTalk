@@ -6,7 +6,7 @@
 ---
 
 ## Last Updated
-2026-09-25 — Days 3–6 complete ✅, AI bugs being fixed
+2026-09-29 — Day 8 complete ✅ Full UI/UX overhaul + Login redesign + Profile page
 
 ## Live URLs
 - Frontend (Vercel): https://globe-talk-brown.vercel.app ✅ LIVE
@@ -84,7 +84,7 @@
 | 5 | AI: Conversation Summariser (Gemini) | ✅ Done |
 | 6 | AI: Smart Reply Suggestions (Gemini) | ✅ Done |
 | 7 | AI: Voice-to-Text (Web Speech API) | ⬜ Next |
-| 8 | UI/UX Overhaul | ⬜ |
+| 8 | UI/UX Overhaul | ✅ Done |
 | 9 | Read Receipts + Admin Upgrade | ⬜ |
 | 10 | GitHub Portfolio Polish | ⬜ |
 
