@@ -16,7 +16,10 @@ import {
   ONLINE_USERS,
   START_TYPING,
   STOP_TYPING,
+  MESSAGE_READ,
+  MESSAGES_SEEN,
 } from "./constants/events.js";
+
 import { getSockets } from "./lib/helper.js";
 import { Message } from "./models/message.js";
 import { corsOptions } from "./constants/config.js";
@@ -200,11 +203,13 @@ io.on("connection", (socket) => {
     );
 
     try {
-      await Message.create(messageForDB); // Store original message
+      // Include sender in readBy — they've already "seen" their own message
+      await Message.create({ ...messageForDB, readBy: [user._id] });
     } catch (error) {
       console.log("Message DB Error:", error);
     }
   });
+
 
   socket.on(START_TYPING, ({ members, chatId }) => {
     const membersSockets = getSockets(members);
@@ -216,11 +221,49 @@ io.on("connection", (socket) => {
     socket.to(membersSockets).emit(STOP_TYPING, { chatId });
   });
 
+  // ── Read Receipts ──────────────────────────────────────────────────────────
+  // When a user opens a chat, they emit MESSAGE_READ.
+  // We add them to readBy on all unread messages in that chat, then
+  // notify each original sender so their ticks update from ✓ to ✓✓.
+  socket.on(MESSAGE_READ, async ({ chatId, members }) => {
+    if (!chatId) return;
+    const readerId = user._id;
+
+    try {
+      // Find all messages in this chat NOT already read by this user
+      const unreadMessages = await Message.find({
+        chat: chatId,
+        readBy: { $ne: readerId },
+        sender: { $ne: readerId }, // Don't mark own messages
+      }).select("_id sender");
+
+      if (unreadMessages.length === 0) return;
+
+      // Mark them all as read in one DB call
+      await Message.updateMany(
+        { _id: { $in: unreadMessages.map((m) => m._id) } },
+        { $addToSet: { readBy: readerId } }
+      );
+
+      // Notify each unique sender so their UI ticks update
+      const senderIds = [...new Set(unreadMessages.map((m) => m.sender.toString()))];
+      senderIds.forEach((senderId) => {
+        const senderSocketId = userSocketIDs.get(senderId);
+        if (senderSocketId) {
+          io.to(senderSocketId).emit(MESSAGES_SEEN, { chatId });
+        }
+      });
+    } catch (err) {
+      console.log("MESSAGE_READ error:", err);
+    }
+  });
+
   socket.on(CHAT_JOINED, ({ userId, members }) => {
     onlineUsers.add(userId.toString());
     const membersSocket = getSockets(members);
     io.to(membersSocket).emit(ONLINE_USERS, Array.from(onlineUsers));
   });
+
 
   socket.on(CHAT_LEAVED, ({ userId, members }) => {
     onlineUsers.delete(userId.toString());

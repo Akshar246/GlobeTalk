@@ -15,6 +15,13 @@ const CHAT_LEAVED = "CHAT_LEAVED";
 
 const ONLINE_USERS = "ONLINE_USERS";
 
+// ── Read Receipts ─────────────────────────────────────────────────────────────
+// Client emits MESSAGE_READ when user opens a chat.
+// Server emits MESSAGES_SEEN back to the original sender with the chatId,
+// so their UI can update the tick from ✓ to ✓✓.
+const MESSAGE_READ   = "MESSAGE_READ";
+const MESSAGES_SEEN  = "MESSAGES_SEEN";
+
 export {
   ALERT,
   REFETCH_CHATS,
@@ -27,4 +34,6 @@ export {
   CHAT_JOINED,
   CHAT_LEAVED,
   ONLINE_USERS,
+  MESSAGE_READ,
+  MESSAGES_SEEN,
 };

@@ -5,7 +5,8 @@ import { fileFormat } from "../../lib/features";
 import RenderAttachment from "./RenderAttachment";
 import { motion } from "framer-motion";
 
-const MessageComponent = ({ message, user }) => {
+const MessageComponent = ({ message, user, isSeen }) => {
+
   const {
     sender,
     content,
@@ -118,21 +119,36 @@ const MessageComponent = ({ message, user }) => {
               {displayContent}
             </Typography>
           )}
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: "0.65rem",
-              opacity: 0.7,
-              marginLeft: "auto",
-              lineHeight: 1,
-              position: "relative",
-              top: "2px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {timeAgo}
-          </Typography>
+
+          {/* Timestamp + read receipt ticks */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "2px", marginLeft: "auto", position: "relative", top: "2px" }}>
+            <Typography
+              variant="caption"
+              sx={{ fontSize: "0.65rem", opacity: 0.7, lineHeight: 1, whiteSpace: "nowrap" }}
+            >
+              {timeAgo}
+            </Typography>
+
+            {/* Only show ticks for our own sent messages */}
+            {sameSender && (
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: "0.75rem",
+                  lineHeight: 1,
+                  letterSpacing: "-2px",
+                  // ✓✓ = indigo (read), ✓ = semi-transparent white (delivered)
+                  color: isSeen ? "#A5F3FC" : "rgba(255,255,255,0.6)",
+                  transition: "color 0.4s ease",
+                  fontWeight: 700,
+                }}
+              >
+                {isSeen ? "✓✓" : "✓"}
+              </Typography>
+            )}
+          </Box>
         </Box>
+
 
         {/* Translation toggle */}
         {hasTranslationToggle && (

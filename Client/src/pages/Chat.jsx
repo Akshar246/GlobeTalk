@@ -22,7 +22,10 @@ import {
   NEW_MESSAGE,
   START_TYPING,
   STOP_TYPING,
+  MESSAGE_READ,
+  MESSAGES_SEEN,
 } from "../constants/events";
+
 import { useChatDetailsQuery, useGetMessagesQuery } from "../redux/api/api";
 import { useErrors, useSocketEvents } from "../hooks/hook";
 import { useInfiniteScrollTop } from "6pp";
@@ -51,6 +54,10 @@ const Chat = ({ chatId, user }) => {
   const [IamTyping, setIamTyping] = useState(false);
   const [userTyping, setUserTyping] = useState(false);
   const typingTimeout = useRef(null);
+
+  // Tracks chatIds where the other party has read our messages (for ✓✓ ticks)
+  const [seenChats, setSeenChats] = useState(new Set());
+
 
   const chatDetails = useChatDetailsQuery({ chatId, skip: !chatId });
   const oldMessagesChunk = useGetMessagesQuery({ chatId, page });
@@ -107,6 +114,11 @@ const Chat = ({ chatId, user }) => {
     socket.emit(CHAT_JOINED, { userId: user._id, members });
     dispatch(removeNewMessagesAlert(chatId));
 
+    // Notify other members that we've read their messages
+    if (chatId && members?.length) {
+      socket.emit(MESSAGE_READ, { chatId, members });
+    }
+
     return () => {
       setMessages([]);
       setMessage("");
@@ -115,6 +127,7 @@ const Chat = ({ chatId, user }) => {
       socket.emit(CHAT_LEAVED, { userId: user._id, members });
     };
   }, [chatId]);
+
 
   // Auto-scroll to newest message
   useEffect(() => {
@@ -172,12 +185,23 @@ const Chat = ({ chatId, user }) => {
     [chatId]
   );
 
+  // When the other party opens our chat, this fires and we flip ticks to ✓✓
+  const messagesSeenListener = useCallback(
+    (data) => {
+      if (data.chatId !== chatId) return;
+      setSeenChats((prev) => new Set([...prev, data.chatId]));
+    },
+    [chatId]
+  );
+
   const eventHandler = {
     [ALERT]: alertListener,
     [NEW_MESSAGE]: newMessagesListener,
     [START_TYPING]: startTypingListener,
     [STOP_TYPING]: stopTypingListener,
+    [MESSAGES_SEEN]: messagesSeenListener,
   };
+
 
   useSocketEvents(socket, eventHandler);
   useErrors(errors);
@@ -233,7 +257,12 @@ const Chat = ({ chatId, user }) => {
         }}
       >
         {allMessages.map((i) => (
-          <MessageComponent key={i._id} message={i} user={user} />
+          <MessageComponent
+            key={i._id}
+            message={i}
+            user={user}
+            isSeen={seenChats.has(chatId)}
+          />
         ))}
         {userTyping && <TypingLoader />}
         <div ref={bottomRef} />

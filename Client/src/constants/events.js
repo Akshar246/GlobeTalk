@@ -15,6 +15,10 @@ const CHAT_LEAVED = "CHAT_LEAVED";
 
 const ONLINE_USERS = "ONLINE_USERS";
 
+// ── Read Receipts ─────────────────────────────────────────────────────────────
+const MESSAGE_READ  = "MESSAGE_READ";   // client → server (user opened chat)
+const MESSAGES_SEEN = "MESSAGES_SEEN";  // server → client (recipient has read)
+
 export {
   ALERT,
   REFETCH_CHATS,
@@ -27,4 +31,6 @@ export {
   CHAT_JOINED,
   CHAT_LEAVED,
   ONLINE_USERS,
+  MESSAGE_READ,
+  MESSAGES_SEEN,
 };

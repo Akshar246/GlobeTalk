@@ -27,6 +27,16 @@ const schema = new Schema(
       ref: "Chat",
       required: true,
     },
+
+    // ── Read Receipts ──────────────────────────────────────────────────────────
+    // Populated with user IDs who have opened the chat after this message arrived.
+    // The sender is added automatically on creation.
+    readBy: [
+      {
+        type: Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,
