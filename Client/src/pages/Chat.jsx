@@ -1,9 +1,11 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+
 
 import AppLayout from "../components/layout/AppLayout";
 import { IconButton, Skeleton, Stack, Box } from "@mui/material";
@@ -82,6 +84,9 @@ const Chat = ({ chatId, user }) => {
   const messageOnChange = (e) => {
     setMessage(e.target.value);
 
+    // Don't emit typing events until chat members have loaded
+    if (!members?.length) return;
+
     if (!IamTyping) {
       socket.emit(START_TYPING, { members, chatId });
       setIamTyping(true);
@@ -94,6 +99,7 @@ const Chat = ({ chatId, user }) => {
       setIamTyping(false);
     }, 2000);
   };
+
 
   const handleFileOpen = (e) => {
     dispatch(setIsFileMenu(true));
@@ -109,24 +115,45 @@ const Chat = ({ chatId, user }) => {
 
   // ─── Effects ─────────────────────────────────────────────────────────────────
 
-  // Join/leave chat room and clear state on chat switch
-  useEffect(() => {
-    socket.emit(CHAT_JOINED, { userId: user._id, members });
-    dispatch(removeNewMessagesAlert(chatId));
+  // Ref-guards so we don't double-emit when members re-renders for the same chat
+  const joinedChatRef = useRef(null);
+  const readSentRef   = useRef(null);
 
-    // Notify other members that we've read their messages
-    if (chatId && members?.length) {
-      socket.emit(MESSAGE_READ, { chatId, members });
-    }
+  // Effect 1 — Reset local state when chat switches + handle cleanup on leave
+  useEffect(() => {
+    dispatch(removeNewMessagesAlert(chatId));
 
     return () => {
       setMessages([]);
       setMessage("");
       setOldMessages([]);
       setPage(1);
+      joinedChatRef.current = null;
+      readSentRef.current   = null;
+      // members is captured from closure — might be stale but that's fine for leave
       socket.emit(CHAT_LEAVED, { userId: user._id, members });
     };
   }, [chatId]);
+
+  // Effect 2 — Fires once members data is loaded for the current chat.
+  // This is what was broken: members is undefined when chatId first changes
+  // because chatDetails is an async fetch. We watch [chatId, members] so this
+  // runs again as soon as the query resolves, guaranteeing the emits happen.
+  useEffect(() => {
+    if (!chatId || !members?.length) return;
+
+    // CHAT_JOINED — notify others we're online in this chat
+    if (joinedChatRef.current !== chatId) {
+      joinedChatRef.current = chatId;
+      socket.emit(CHAT_JOINED, { userId: user._id, members });
+    }
+
+    // MESSAGE_READ — mark unread messages as seen + flip ✓ → ✓✓ for sender
+    if (readSentRef.current !== chatId) {
+      readSentRef.current = chatId;
+      socket.emit(MESSAGE_READ, { chatId, members });
+    }
+  }, [chatId, members]);
 
 
   // Auto-scroll to newest message
@@ -194,13 +221,15 @@ const Chat = ({ chatId, user }) => {
     [chatId]
   );
 
-  const eventHandler = {
+  // Memoised so useSocketEvents only re-registers on chatId change,
+  // not on every single re-render (e.g. when a new message arrives).
+  const eventHandler = useMemo(() => ({
     [ALERT]: alertListener,
     [NEW_MESSAGE]: newMessagesListener,
     [START_TYPING]: startTypingListener,
     [STOP_TYPING]: stopTypingListener,
     [MESSAGES_SEEN]: messagesSeenListener,
-  };
+  }), [alertListener, newMessagesListener, startTypingListener, stopTypingListener, messagesSeenListener]);
 
 
   useSocketEvents(socket, eventHandler);
